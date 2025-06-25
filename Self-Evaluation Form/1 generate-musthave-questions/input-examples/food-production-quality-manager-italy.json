@@ -1,0 +1,15 @@
+{
+  "id": "quality_italy_01",
+  "language": "it",
+  "job_role": "Quality Manager",
+  "region": "Italy",
+  "must_haves_raw": "- Esperienza di lavoro con attrezzature da forno\n- Capacità di presenza regolare in azienda (città di Verres)\n- Esperienza nell'implementazione di schede di controllo qualità\n- Conoscenza degli standard di qualità europei per la produzione alimentare\n- Previsioni salariali fino a 5500 euro lordi",
+  "must_haves_list": [
+    "Esperienza di lavoro con attrezzature da forno",
+    "Presenza regolare richiesta in sede (Verres)",
+    "Esperienza nella compilazione e gestione di schede di controllo qualità",
+    "Conoscenza degli standard europei per la qualità alimentare (es. HACCP, ISO 22000)",
+    "Aspettativa salariale massima: 5500€ lordi"
+  ],
+  "comment": "Hands-on QA manager with both site presence and EU food production compliance"
+}
