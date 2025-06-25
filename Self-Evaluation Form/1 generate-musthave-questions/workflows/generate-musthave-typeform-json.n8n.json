@@ -1,0 +1,97 @@
+{
+  "name": "generate-musthave-typeform-json",
+  "nodes": [
+    {
+      "parameters": {
+        "fields": [
+          {
+            "name": "must_haves",
+            "type": "string",
+            "label": "Must-have list",
+            "required": true,
+            "placeholder": "One must-have per line"
+          }
+        ]
+      },
+      "name": "Must-haves Form",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "filePath": "Self-Evaluation Form/1 generate-musthave-questions/1.1 must-have-questions-list-generation/must-have-questions-generation-prompt.md"
+      },
+      "name": "Read Prompt File",
+      "type": "n8n-nodes-base.readBinaryFile",
+      "typeVersion": 1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "const prompt = Buffer.from(items[1].binary.data.data, 'base64').toString();\nconst mustHaves = items[0].json.must_haves;\nreturn [{ json: { fullPrompt: `${prompt}\n\nMust have list:\n${mustHaves}` } }];"
+      },
+      "name": "Build Prompt",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "operation": "chat",
+        "chatCompletion": {
+          "model": "gpt-3.5-turbo",
+          "messages": [
+            {
+              "role": "system",
+              "content": "={{$json.fullPrompt}}"
+            }
+          ],
+          "responseFormat": "json"
+        }
+      },
+      "name": "OpenAI",
+      "type": "n8n-nodes-base.openAi",
+      "typeVersion": 1,
+      "position": [850, 300]
+    }
+  ],
+  "connections": {
+    "Must-haves Form": {
+      "main": [
+        [
+          {
+            "node": "Read Prompt File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Prompt File": {
+      "main": [
+        [
+          {
+            "node": "Build Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Prompt": {
+      "main": [
+        [
+          {
+            "node": "OpenAI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {},
+  "id": "generate-musthave-typeform-json"
+}
