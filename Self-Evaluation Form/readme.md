@@ -11,70 +11,98 @@ It is the first step in the candidate journey, and its goal is to:
 
 ## 🧱 Components (Workflows)
 
-Each step is implemented as an independent `n8n` workflow for modularity and reliability.
+Each step is implemented as an independent `n8n` workflow for modularity, reliability, and easier debugging.
 
-### 1. `generate-musthave-questions`
-- Input: plain-text `must_haves` list
-- Output: structured question list
-- Model: GPT-3.5
-- Constraints: only `multiple_choice` or `number` question types
+### 1. `generate-musthave-typeform-json`
 
----
-
-### 2. `generate-base-typeform-json`
-- Input: structured question list
-- Output: valid Typeform JSON with:
-  - title
-  - welcome screen
-  - all must-have questions
-  - thank-you screen
-- Handles API errors and retries with the same model
-
----
-
-### 3. `add-salary-logic-branching`
-- Adds conditional logic:
-  - If salary expectation > budget → ask: "Our budget is up to X, are you still interested?"
-  - Otherwise, do not show the budget
-- Triggered only when a salary cap is defined
-- Uses GPT-4 if GPT-3.5 fails to correctly generate logic
+- **Input:** Raw `must_haves` list (from a recruiter or job post form)
+- **Output:** Valid Typeform JSON with:
+  - All must-have filter questions
+  - Welcome screen
+  - Thank-you screen
+- **Built with:**
+  - GPT-3.5 to transform human input into structured Typeform-ready questions
+  - Typeform API structure
+- **Validates output:**
+  - Automatically submits JSON to Typeform
+  - On error: retries generation with error details in the prompt
+  - On success: saves as `v1_output.json`
+- **Constraints:**
+  - Only uses `number`, `yes_no`, or `multiple_choice`
+  - Every field is `required: true`
+  - No salary logic yet (handled in the next step)
 
 ---
 
-### 4. `append-nice-to-have-questions`
-- Adds extra questions to enrich the candidate profile
-- Question type: `multiple_choice` with `allow_multiple_selection: true`
-- Always includes `"Other"` option
-- Ordered logically after related must-have questions
+### 2. `add-salary-logic-branching`
+
+- **Input:** Base Typeform JSON + salary budget (optional)
+- **Function:** Adds salary expectation logic
+  - If candidate enters a number above the defined cap → show follow-up: “Our budget is up to $X. Are you still interested?”
+  - If below or no budget defined → follow-up question is skipped
+- **Fallback:** Uses GPT-4 only if GPT-3.5 fails to structure valid logic
+- **Checklist validation:**
+  - Salary logic works correctly
+  - Only shows salary cap if candidate expectations are higher
 
 ---
 
-### 5. `validate-and-deploy-final-form`
-- Performs final JSON checks:
-  - Salary logic correctness
-  - Language-specific contact fields (Telegram vs LinkedIn)
-  - Email presence
-- Deploys working form to Typeform and returns shareable `form_url`
+### 3. `append-nice-to-have-questions`
+
+- **Input:** Existing JSON
+- **Function:** Appends optional exploratory questions (e.g. tech stack, related industries, past tools)
+- **Characteristics:**
+  - Type: `multiple_choice` with `allow_multiple_selection: true`
+  - Always includes `"Other"` as an option
+  - Questions are logically grouped and follow related must-haves
+- **Value:** Enriches candidate profile and adds commitment friction (to reduce low-effort applications)
+
+---
+
+### 4. `validate-and-deploy-final-form`
+
+- **Input:** Full Typeform JSON (with must-haves, salary logic, and optional questions)
+- **Validation Rules:**
+  - Salary poker logic behaves correctly
+  - Contact method matches job language:
+    - 🇷🇺 Russian: ask for Telegram, skip LinkedIn
+    - 🇺🇸 English: ask for phone + LinkedIn, skip Telegram
+  - Email field is always present
+- **Output:**
+  - Deployed Typeform
+  - Final `form_url`
+  - Stored as `final_valid_form.json`
 
 ---
 
 ## 🛠 Local Development
 
-- Test each `.n8n.json` workflow individually in `n8n`
-- Store draft prompts and notes in each module folder (`README_todo.md`)
-- Final JSONs can be versioned locally as `v1_output.json`, etc.
+- Each `.n8n.json` file can be run/tested independently inside your n8n environment
+- Input examples stored in `/input_examples/`:
+  - Realistic recruiter-written must-haves in multiple languages
+  - Optional: expected output question lists for comparison
+- Prompts stored in `/prompts/`
+- Intermediate/final JSONs stored in `/output_jsons/`
 
 ---
 
 ## 🔄 Workflow Chain Summary
 
 ```plaintext
-generate-musthave-questions
-    ↓
-generate-base-typeform-json
+generate-musthave-typeform-json
     ↓
 add-salary-logic-branching (optional)
     ↓
 append-nice-to-have-questions
     ↓
 validate-and-deploy-final-form
+🧪 Example Output Format
+json
+Copy
+Edit
+{
+  "question_text": "Do you have experience with Exchange Server?",
+  "type": "yes_no",
+  "required": true,
+  "ref": "exchange_server_exp"
+}
