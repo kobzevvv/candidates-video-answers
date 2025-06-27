@@ -1,0 +1,371 @@
+{
+	"info": {
+		"_postman_id": "047fae73-8feb-45d5-89f8-4e51328b4ef9",
+		"name": "hireflix",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "945265",
+		"_collection_link": "https://starjourney.postman.co/workspace/StarJourney-Workspace~a790e906-83d3-47d9-8af7-6db9373cf5ad/collection/945265-047fae73-8feb-45d5-89f8-4e51328b4ef9?action=share&source=collection_link&creator=945265"
+	},
+	"item": [
+		{
+			"name": "ok_get_positions list",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "x-api-key",
+						"value": "d41af738-8526-4703-841f-6c4aaf03206a",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"query\": \"query {\\n  positions {\\n    id\\n    name\\n    archived\\n  }\\n}\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://api.hireflix.com/me",
+					"protocol": "https",
+					"host": [
+						"api",
+						"hireflix",
+						"com"
+					],
+					"path": [
+						"me"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "ok_get_candidate_answer",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "x-api-key",
+						"value": "d41af738-8526-4703-841f-6c4aaf03206a",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"query\": \"query {\\n  positions {\\n    id\\n    name\\n    archived\\n  }\\n}\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://api.hireflix.com/me",
+					"protocol": "https",
+					"host": [
+						"api",
+						"hireflix",
+						"com"
+					],
+					"path": [
+						"me"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "ok_send_invite_for_interview_for_a_candidate",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "x-api-key",
+						"value": "d41af738-8526-4703-841f-6c4aaf03206a",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"query\": \"query {\\n  positions {\\n    id\\n    name\\n    archived\\n  }\\n}\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://api.hireflix.com/me",
+					"protocol": "https",
+					"host": [
+						"api",
+						"hireflix",
+						"com"
+					],
+					"path": [
+						"me"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "ok_get_link_to_shared_recorded_answers",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "x-api-key",
+						"value": "d41af738-8526-4703-841f-6c4aaf03206a",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"query\": \"query {\\n  positions {\\n    id\\n    name\\n    archived\\n  }\\n}\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://api.hireflix.com/me",
+					"protocol": "https",
+					"host": [
+						"api",
+						"hireflix",
+						"com"
+					],
+					"path": [
+						"me"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "not_complited_tests_yettop_1_add_new_question",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "x-api-key",
+						"value": "d41af738-8526-4703-841f-6c4aaf03206a",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"query\": \"query {\\n  positions {\\n    id\\n    name\\n    archived\\n  }\\n}\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://api.hireflix.com/me",
+					"protocol": "https",
+					"host": [
+						"api",
+						"hireflix",
+						"com"
+					],
+					"path": [
+						"me"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "not_complited_tests_yettop_1_priority_delete_section",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "x-api-key",
+						"value": "d41af738-8526-4703-841f-6c4aaf03206a",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"query\": \"query {\\n  positions {\\n    id\\n    name\\n    archived\\n  }\\n}\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://api.hireflix.com/me",
+					"protocol": "https",
+					"host": [
+						"api",
+						"hireflix",
+						"com"
+					],
+					"path": [
+						"me"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "not_complited_tests_yettop_2_priority_change_position_title",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "x-api-key",
+						"value": "d41af738-8526-4703-841f-6c4aaf03206a",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"query\": \"query {\\n  positions {\\n    id\\n    name\\n    archived\\n  }\\n}\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://api.hireflix.com/me",
+					"protocol": "https",
+					"host": [
+						"api",
+						"hireflix",
+						"com"
+					],
+					"path": [
+						"me"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "not_complited_tests_yettop_3_priority_add_new_position",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "x-api-key",
+						"value": "d41af738-8526-4703-841f-6c4aaf03206a",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"query\": \"query {\\n  positions {\\n    id\\n    name\\n    archived\\n  }\\n}\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://api.hireflix.com/me",
+					"protocol": "https",
+					"host": [
+						"api",
+						"hireflix",
+						"com"
+					],
+					"path": [
+						"me"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "not_complited_tests_yettop_3_priority_create_interview_for_a_position",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "x-api-key",
+						"value": "d41af738-8526-4703-841f-6c4aaf03206a",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"query\": \"query {\\n  positions {\\n    id\\n    name\\n    archived\\n  }\\n}\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://api.hireflix.com/me",
+					"protocol": "https",
+					"host": [
+						"api",
+						"hireflix",
+						"com"
+					],
+					"path": [
+						"me"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
