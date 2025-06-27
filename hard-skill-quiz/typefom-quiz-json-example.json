@@ -1,0 +1,392 @@
+{
+    "id": "G8zGUgW8",
+    "type": "score",
+    "title": "My new form",
+    "workspace": {
+        "href": "https://api.typeform.com/workspaces/kVGTdx"
+    },
+    "theme": {
+        "href": "https://api.typeform.com/themes/qHWOQ7"
+    },
+    "settings": {
+        "language": "en",
+        "progress_bar": "proportion",
+        "meta": {
+            "allow_indexing": false
+        },
+        "hide_navigation": false,
+        "is_public": true,
+        "is_trial": false,
+        "show_progress_bar": true,
+        "show_typeform_branding": true,
+        "are_uploads_public": false,
+        "show_time_to_complete": true,
+        "show_number_of_submissions": false,
+        "show_cookie_consent": false,
+        "show_question_number": true,
+        "show_key_hint_on_choices": true,
+        "autosave_progress": true,
+        "free_form_navigation": false,
+        "use_lead_qualification": false,
+        "pro_subdomain_enabled": false,
+        "milestones": [
+            {
+                "field_ref": "87b1439a-5e66-4505-9d19-d2854131f7fd",
+                "status": "inactive",
+                "reason": "wrong_position"
+            }
+        ],
+        "auto_translate": true,
+        "partial_responses_to_all_integrations": true
+    },
+    "thankyou_screens": [
+        {
+            "id": "7Ym78xSim3lA",
+            "ref": "d0cfa40a-69f5-42fd-9149-f589ffe248ac",
+            "title": "Sad text. That unfortunately not enoup",
+            "type": "thankyou_screen",
+            "properties": {
+                "show_button": false,
+                "share_icons": false,
+                "button_mode": "default_redirect",
+                "button_text": "again",
+                "description": "encourage to try again"
+            }
+        },
+        {
+            "id": "mVFco4bISGOb",
+            "ref": "6aa40eca-172c-41b4-8824-71bb41006093",
+            "title": "Redirect to video answers ",
+            "type": "url_redirect",
+            "properties": {
+                "redirect_url": "https://hireflix.com"
+            }
+        },
+        {
+            "id": "DefaultTyScreen",
+            "ref": "default_tys",
+            "title": "Thanks for completing this typeform\nNow *create your own* — it's free, easy, & beautiful",
+            "type": "thankyou_screen",
+            "properties": {
+                "show_button": true,
+                "share_icons": false,
+                "button_mode": "default_redirect",
+                "button_text": "Create a *typeform*"
+            },
+            "attachment": {
+                "type": "image",
+                "href": "https://images.typeform.com/images/2dpnUBBkz2VN"
+            }
+        }
+    ],
+    "fields": [
+        {
+            "id": "QkbG5HPqPDJN",
+            "title": "quiz question example with single right answer",
+            "ref": "c4868921-746f-4ac1-9ed3-10418498015e",
+            "properties": {
+                "randomize": false,
+                "allow_multiple_selection": false,
+                "allow_other_choice": false,
+                "vertical_alignment": true,
+                "choices": [
+                    {
+                        "id": "LK4K9JsJWwxi",
+                        "ref": "93dc006f-1161-4193-a48b-7f70dae01eda",
+                        "label": "wrong option 1, should be at least not super shorter then right one. (if it is we can add some explanation or comment in brackets in the end)"
+                    },
+                    {
+                        "id": "8Uj645hvmRgm",
+                        "ref": "ca3ad6ab-66cb-4b92-a511-fb0313a9ac44",
+                        "label": "right option. should be at least not a lot longer then all wrong options"
+                    },
+                    {
+                        "id": "10XxihzFrYVK",
+                        "ref": "cd7469c4-3855-430a-8dc0-d36974a1f0e2",
+                        "label": "wrong option 2. Should at least sound reasanable and for someone not familiar with the topic should looks like right one"
+                    }
+                ]
+            },
+            "validations": {
+                "required": false
+            },
+            "type": "multiple_choice"
+        },
+        {
+            "id": "XlJKWji6BGak",
+            "title": "More then one right answer question",
+            "ref": "87b1439a-5e66-4505-9d19-d2854131f7fd",
+            "properties": {
+                "description": "disclamer that there are more then one right answer. And! restriction to choose the only option, bc candidates often automatically mark only one as right. usually limits from 2-max",
+                "randomize": false,
+                "allow_multiple_selection": true,
+                "allow_other_choice": false,
+                "vertical_alignment": true,
+                "choices": [
+                    {
+                        "id": "m6UHH42wkeS2",
+                        "ref": "f498c26d-0a4e-42c8-82ac-85c8645bb39f",
+                        "label": "1-wrong"
+                    },
+                    {
+                        "id": "Q2R2qrZr3r7a",
+                        "ref": "c4a72d05-64ea-47b8-a0cf-17161ea37fdb",
+                        "label": "2-correct"
+                    },
+                    {
+                        "id": "ptPxNZ6zHRkQ",
+                        "ref": "669f2137-8f9e-4cfa-9d43-ec806c7e45fe",
+                        "label": "3-correct"
+                    },
+                    {
+                        "id": "QFUcLyLM6np6",
+                        "ref": "679f800d-6ece-41a0-a1df-54e001a1e831",
+                        "label": "4-correct"
+                    }
+                ]
+            },
+            "validations": {
+                "required": false,
+                "min_selection": 2,
+                "max_selection": 4
+            },
+            "type": "multiple_choice"
+        }
+    ],
+    "hidden": [
+        "email"
+    ],
+    "variables": {
+        "counter_67b3c952_696a_4eff_afe6_5a95dc93cb90": 0,
+        "counter_69f1c2cd_d8f8_4cd7_8aaf_a2ee1c807751": 0,
+        "score": 0,
+        "winning_outcome_id": "b886dc06-b234-419b-aa16-c4f267998aba"
+    },
+    "logic": [
+        {
+            "type": "field",
+            "ref": "87b1439a-5e66-4505-9d19-d2854131f7fd",
+            "actions": [
+                {
+                    "action": "add",
+                    "details": {
+                        "target": {
+                            "type": "variable",
+                            "value": "score"
+                        },
+                        "value": {
+                            "type": "constant",
+                            "value": 1
+                        }
+                    },
+                    "condition": {
+                        "op": "is",
+                        "vars": [
+                            {
+                                "type": "field",
+                                "value": "87b1439a-5e66-4505-9d19-d2854131f7fd"
+                            },
+                            {
+                                "type": "choice",
+                                "value": "c4a72d05-64ea-47b8-a0cf-17161ea37fdb"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "action": "add",
+                    "details": {
+                        "target": {
+                            "type": "variable",
+                            "value": "score"
+                        },
+                        "value": {
+                            "type": "constant",
+                            "value": 1
+                        }
+                    },
+                    "condition": {
+                        "op": "is",
+                        "vars": [
+                            {
+                                "type": "field",
+                                "value": "87b1439a-5e66-4505-9d19-d2854131f7fd"
+                            },
+                            {
+                                "type": "choice",
+                                "value": "669f2137-8f9e-4cfa-9d43-ec806c7e45fe"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "action": "add",
+                    "details": {
+                        "target": {
+                            "type": "variable",
+                            "value": "score"
+                        },
+                        "value": {
+                            "type": "constant",
+                            "value": 1
+                        }
+                    },
+                    "condition": {
+                        "op": "is",
+                        "vars": [
+                            {
+                                "type": "field",
+                                "value": "87b1439a-5e66-4505-9d19-d2854131f7fd"
+                            },
+                            {
+                                "type": "choice",
+                                "value": "679f800d-6ece-41a0-a1df-54e001a1e831"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "action": "set",
+                    "details": {
+                        "target": {
+                            "type": "variable",
+                            "value": "winning_outcome_id"
+                        },
+                        "value": {
+                            "type": "constant",
+                            "value": "b886dc06-b234-419b-aa16-c4f267998aba"
+                        }
+                    },
+                    "condition": {
+                        "op": "always",
+                        "vars": []
+                    }
+                },
+                {
+                    "action": "set",
+                    "details": {
+                        "target": {
+                            "type": "variable",
+                            "value": "winning_outcome_id"
+                        },
+                        "value": {
+                            "type": "constant",
+                            "value": "669ef148-7af9-467f-820b-40b37389d9f0"
+                        }
+                    },
+                    "condition": {
+                        "op": "and",
+                        "vars": [
+                            {
+                                "op": "greater_equal_than",
+                                "vars": [
+                                    {
+                                        "type": "variable",
+                                        "value": "score"
+                                    },
+                                    {
+                                        "type": "constant",
+                                        "value": 0
+                                    }
+                                ]
+                            },
+                            {
+                                "op": "lower_equal_than",
+                                "vars": [
+                                    {
+                                        "type": "variable",
+                                        "value": "score"
+                                    },
+                                    {
+                                        "type": "constant",
+                                        "value": 2
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                },
+                {
+                    "action": "set",
+                    "details": {
+                        "target": {
+                            "type": "variable",
+                            "value": "winning_outcome_id"
+                        },
+                        "value": {
+                            "type": "constant",
+                            "value": "b886dc06-b234-419b-aa16-c4f267998aba"
+                        }
+                    },
+                    "condition": {
+                        "op": "and",
+                        "vars": [
+                            {
+                                "op": "greater_equal_than",
+                                "vars": [
+                                    {
+                                        "type": "variable",
+                                        "value": "score"
+                                    },
+                                    {
+                                        "type": "constant",
+                                        "value": 3
+                                    }
+                                ]
+                            },
+                            {
+                                "op": "lower_equal_than",
+                                "vars": [
+                                    {
+                                        "type": "variable",
+                                        "value": "score"
+                                    },
+                                    {
+                                        "type": "constant",
+                                        "value": 4
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                },
+                {
+                    "action": "jump",
+                    "details": {
+                        "to": {
+                            "type": "outcome",
+                            "value": "winning_outcome_id"
+                        }
+                    },
+                    "condition": {
+                        "op": "always",
+                        "vars": []
+                    }
+                }
+            ]
+        }
+    ],
+    "outcome": {
+        "variable": "winning_outcome_id",
+        "choices": [
+            {
+                "id": "DmHk8iepdldw",
+                "ref": "b886dc06-b234-419b-aa16-c4f267998aba",
+                "title": "Sad text. That unfortunately not enoup",
+                "counter_variable": "counter_69f1c2cd_d8f8_4cd7_8aaf_a2ee1c807751",
+                "thankyou_screen_ref": "d0cfa40a-69f5-42fd-9149-f589ffe248ac"
+            },
+            {
+                "id": "0MXwkVSUbBl5",
+                "ref": "669ef148-7af9-467f-820b-40b37389d9f0",
+                "title": "Redirect to video answers ",
+                "counter_variable": "counter_67b3c952_696a_4eff_afe6_5a95dc93cb90",
+                "thankyou_screen_ref": "6aa40eca-172c-41b4-8824-71bb41006093"
+            }
+        ]
+    },
+    "_links": {
+        "display": "https://hiretechfast.typeform.com/to/G8zGUgW8",
+        "responses": "https://api.typeform.com/forms/G8zGUgW8/responses"
+    }
+}

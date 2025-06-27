@@ -6,7 +6,7 @@ This repository automates the **entire candidate journey** — from clicking "Ap
 
 ## 🛤 Candidate Journey Stages
 
-1. **Self-Evaluation Form**
+1. **Application Form**
    - Automatically generated from job post and requirements
    - Includes must-have filters, salary logic, and contextual follow-ups
 
@@ -23,7 +23,7 @@ Each stage is fully automated **from the candidate’s perspective**, while rema
 
 ## ✅ Status
 
-- ✅ Candidate Self-Evaluation Form → **in progress**
+- ✅ Candidate Application Form → **in progress**
 - ⏳ Hard Skill Quiz → planned
 - ⏳ Video Questions → planned
 
@@ -49,5 +49,5 @@ Each stage is fully automated **from the candidate’s perspective**, while rema
 
 ## 👥 Team & Roadmap
 
-We're currently focused on perfecting the self-evaluation form generation step. All contributions, ideas, or testing feedback are welcome.
+We're currently focused on perfecting the Application form generation step. All contributions, ideas, or testing feedback are welcome.
 
