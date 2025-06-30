@@ -3,8 +3,8 @@
     "language": "en",
     "job_role": "Customer Success Manager",
     "region": "Remote, US timezone overlap",
-    "must_haves_raw": "- experience working in B2B SaaS companies\n- experience managing customers with monthly service prices of $500 or more\n- perfect English\n- availability to work in US timezones\n- salary expectation up to $1500 gross (if higher, the candidate must agree to $1500 for the first two months, then $1000 base + upsell commissions)",
-    "must_haves_list": [
+    "non_public_extra_job_details_raw": "- experience working in B2B SaaS companies\n- experience managing customers with monthly service prices of $500 or more\n- perfect English\n- availability to work in US timezones\n- salary expectation up to $1500 gross (if higher, the candidate must agree to $1500 for the first two months, then $1000 base + upsell commissions)",
+    "non_public_extra_job_details_list": [
       "Experience working in B2B SaaS companies",
       "Experience handling customers with service pricing of $500/month or higher",
       "Fluency in English (perfect command)",
