@@ -1,6 +1,6 @@
 # 📄 Candidate Self-Evaluation Form
 
-This module generates a dynamic Typeform-based self-evaluation form for job applicants based on the job description and must-have requirements.
+This module generates a dynamic Typeform-based self-evaluation form for job applicants based on the job description and Non-Public-extra-job-details requirements.
 
 It is the first step in the candidate journey, and its goal is to:
 - Filter out candidates who clearly don’t meet the core requirements
@@ -15,9 +15,9 @@ Each step is implemented as an independent `n8n` workflow for modularity, reliab
 
 ### 1. `generate-musthave-typeform-json`
 
-- **Input:** Raw `must_haves` list (from a recruiter or job post form)
+- **Input:** Raw `non_public_extra_job_details` list (from a recruiter or job post form)
 - **Output:** Valid Typeform JSON with:
-  - All must-have filter questions
+  - All Non-Public-extra-job-details filter questions
   - Welcome screen
   - Thank-you screen
 - **Built with:**
@@ -54,14 +54,14 @@ Each step is implemented as an independent `n8n` workflow for modularity, reliab
 - **Characteristics:**
   - Type: `multiple_choice` with `allow_multiple_selection: true`
   - Always includes `"Other"` as an option
-  - Questions are logically grouped and follow related must-haves
+  - Questions are logically grouped and follow related Non-Public-extra-job-details
 - **Value:** Enriches candidate profile and adds commitment friction (to reduce low-effort applications)
 
 ---
 
 ### 4. `validate-and-deploy-final-form`
 
-- **Input:** Full Typeform JSON (with must-haves, salary logic, and optional questions)
+- **Input:** Full Typeform JSON (with Non-Public-extra-job-details, salary logic, and optional questions)
 - **Validation Rules:**
   - Salary poker logic behaves correctly
   - Contact method matches job language:
@@ -79,7 +79,7 @@ Each step is implemented as an independent `n8n` workflow for modularity, reliab
 
 - Each `.n8n.json` file can be run/tested independently inside your n8n environment
 - Input examples stored in `/input_examples/`:
-  - Realistic recruiter-written must-haves in multiple languages
+  - Realistic recruiter-written Non-Public-extra-job-details in multiple languages
   - Optional: expected output question lists for comparison
 - Prompts stored in `/prompts/`
 - Intermediate/final JSONs stored in `/output_jsons/`

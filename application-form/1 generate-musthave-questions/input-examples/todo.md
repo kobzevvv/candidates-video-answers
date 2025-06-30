@@ -1,12 +1,12 @@
 # ✅ TODO – Workflow: generate-musthave-questions
 
-This workflow transforms raw human-written "must haves" into a structured list of Typeform questions (only must-have filters). It is the first step in the candidate self-evaluation form pipeline.
+This workflow transforms raw human-written "Non-Public-extra-job-details" into a structured list of Typeform questions (only Non-Public-extra-job-details filters). It is the first step in the candidate self-evaluation form pipeline.
 
 ---
 
 ## 🎯 Objective
 
-- Parse real-world recruiter inputs from `must_haves_raw`
+- Parse real-world recruiter inputs from `non_public_extra_job_details_raw`
 - Generate structured question objects with:
   - `question_text`
   - `type` (`number`, `yes_no`, or `multiple_choice`)
@@ -19,7 +19,7 @@ This workflow transforms raw human-written "must haves" into a structured list o
 ## 🔍 Scope
 
 - Use GPT-3.5-turbo for generation
-- Output **only must-have filters**
+- Output **only Non-Public-extra-job-details filters**
 - Avoid open-ended or exploratory questions
 - Avoid salary logic — handled in later workflow
 
@@ -44,7 +44,7 @@ This workflow transforms raw human-written "must haves" into a structured list o
 - [ ] Use all files in `input_examples/` as test set
 - [ ] Add expected outputs for at least 3 examples
 - [ ] Create a test harness to:
-  - Feed each `must_haves_raw` into prompt
+  - Feed each `non_public_extra_job_details_raw` into prompt
   - Compare output to `expected_output_questions` (when defined)
   - Log any parsing or formatting issues
 
@@ -77,6 +77,6 @@ This workflow transforms raw human-written "must haves" into a structured list o
 📁 Files to Maintain
 base_prompt.txt – main prompt sent to OpenAI
 
-input_examples/*.json – raw must-have input data
+input_examples/*.json – raw Non-Public-extra-job-details input data
 
 test_output/*.json – structured output for QA

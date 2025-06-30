@@ -8,7 +8,7 @@ This repository automates the **entire candidate journey** — from clicking "Ap
 
 1. **Application Form**
    - Automatically generated from job post and requirements
-   - Includes must-have filters, salary logic, and contextual follow-ups
+   - Includes Non-Public-extra-job-details filters, salary logic, and contextual follow-ups
 
 2. **Hard Skill Quiz**
    - Generated or manually written assessments

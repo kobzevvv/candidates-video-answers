@@ -1,19 +1,19 @@
 {
-  "name": "generate-musthave-typeform-json",
+  "name": "generate-non-public-extra-job-details-typeform-json",
   "nodes": [
     {
       "parameters": {
         "fields": [
           {
-            "name": "must_haves",
+            "name": "non_public_extra_job_details",
             "type": "string",
-            "label": "Must-have list",
+            "label": "Non-Public-extra-job-details list",
             "required": true,
-            "placeholder": "One must-have per line"
+            "placeholder": "One Non-Public-extra-job-detail per line"
           }
         ]
       },
-      "name": "Must-haves Form",
+      "name": "Non-Public-extra-job-details Form",
       "type": "n8n-nodes-base.formTrigger",
       "typeVersion": 1,
       "position": [250, 300]
@@ -29,7 +29,7 @@
     },
     {
       "parameters": {
-        "functionCode": "const prompt = Buffer.from(items[1].binary.data.data, 'base64').toString();\nconst mustHaves = items[0].json.must_haves;\nreturn [{ json: { fullPrompt: `${prompt}\n\nMust have list:\n${mustHaves}` } }];"
+        "functionCode": "const prompt = Buffer.from(items[1].binary.data.data, 'base64').toString();\nconst details = items[0].json.non_public_extra_job_details;\nreturn [{ json: { fullPrompt: `${prompt}\n\nNon-Public-extra-job-details list:\n${details}` } }];"
       },
       "name": "Build Prompt",
       "type": "n8n-nodes-base.function",
@@ -57,7 +57,7 @@
     }
   ],
   "connections": {
-    "Must-haves Form": {
+    "Non-Public-extra-job-details Form": {
       "main": [
         [
           {
@@ -93,5 +93,5 @@
   },
   "active": false,
   "settings": {},
-  "id": "generate-musthave-typeform-json"
+  "id": "generate-non-public-extra-job-details-typeform-json"
 }
