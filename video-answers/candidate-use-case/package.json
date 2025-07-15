@@ -2,7 +2,11 @@
   "name": "hireflix-video-interview",
   "version": "1.0.0",
   "main": "index.js",
-  "dependencies": {
-    "node-fetch": "^2.6.7"
+  "scripts": {
+    "test": "jest"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "node-mocks-http": "^1.11.0"
   }
 }

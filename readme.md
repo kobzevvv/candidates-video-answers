@@ -51,3 +51,4 @@ Each stage is fully automated **from the candidate’s perspective**, while rema
 
 We're currently focused on perfecting the Application form generation step. All contributions, ideas, or testing feedback are welcome.
 
+\n\nLicensed under the MIT License.
