@@ -9,7 +9,7 @@ module.exports = {
     checkingProfile:      'Checking your profile…',
     redirectingSoon:      'You’ll be redirected to the video interview shortly. The link was also sent to your email.',
     statusPageTitle:      'Status page',
-    asyncInviteLink:      'Invitation to asynchronous video interview',
+    asyncInviteLink:      'Invitation to asynchronous video interview (copy sent to your email)',
     bookHumanLink:        'Book interview with human',
     interviewTips:        'Interview tips'
   },
