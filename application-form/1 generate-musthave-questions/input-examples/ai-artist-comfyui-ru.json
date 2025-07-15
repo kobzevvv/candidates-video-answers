@@ -11,6 +11,6 @@
       "Гражданство России, Беларуси или Казахстана",
       "Готовность начать с оплатой до 120 тыс. руб. (с ростом до 150 после 3 месяцев)"
     ],
-    "comment": "Remote AI artist with deep ComfyUI + hardware requirements and CIS nationality constraints"
+    "comment": "Remote AI artist with deep ComfyUI + hardware requirements and CIS nationality constraints",
+    "job_description": "Вакансия ML-инженера/нейродизайнера для настройки генерации изображений в сервисе Vizogen. Нужно настраивать пайплайны ComfyUI и diffusion-модели, генерировать одежду на разных типах моделей, использовать IPAdapter, ControlNet и LoRA, готовить входные изображения и LoRA-модели. Требуется базовый Python, опыт генеративных изображений, умение работать с промптами и параметрами seed/steps/CFG, настройка img2img или ControlNet. Плюсом будет опыт с ComfyUI, дообучением LoRA и понимание рынков Китая и России. Удалённая работа, гибкий график, первый месяц по договору подряда, затем официальное трудоустройство."
   }
-  
