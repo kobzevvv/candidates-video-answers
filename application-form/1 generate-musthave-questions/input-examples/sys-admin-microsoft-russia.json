@@ -16,5 +16,6 @@
     "доступность для работы в офисе в Москве 2 раза в неделю (вт и чт)",
     "зарплатные ожидания от 120 до 150 тыс. рублей"
   ],
-  "comment": "Standard enterprise sysadmin with deep Microsoft stack and office presence requirement"
+  "comment": "Standard enterprise sysadmin with deep Microsoft stack and office presence requirement",
+  "job_description": "Системный инженер третьей линии поддержки для обслуживания инфраструктуры клиентов Up-link. Рабочие задачи включают администрирование Windows Server 2016/2019 (Active Directory, GPO, DNS, DHCP, Exchange), поддержку виртуализации Hyper-V и VMware, работу с системами мониторинга и резервного копирования (Zabbix, PRTG), автоматизацию через Bash/Powershell и участие в миграциях. Требования: 2+ года опыта администрирования Windows-серверов, опыт в аутсорсе или крупной компании, знание сетевых сервисов и оборудования, умение писать скрипты. Плюсом будут Azure/AWS, Terraform/Ansible и профильные сертификаты. Гибридный формат работы с посещением офиса 2–3 дня в неделю, ДМС и компенсация обучения."
 }
