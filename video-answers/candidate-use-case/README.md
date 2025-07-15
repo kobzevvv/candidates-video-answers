@@ -47,9 +47,14 @@ gcloud functions deploy video-interview-invite \
 ### Invoking
 
 ```
-https://REGION-PROJECT.cloudfunctions.net/video-interview-invite?email=jane@example.com&firstName=Jane&positionId=123
+https://REGION-PROJECT.cloudfunctions.net/video-interview-invite?email=jane@example.com&email_manual=jane.alt@example.com&firstName=Jane&first_name_manual=Janet&lastName=Doe&positionId=123&language=english&formId=cQjsMu76&tipsDoc=https://docs.example.com/tips
 ```
 
-Optional params: `lastName`, `language` (`english`|`russian`|`italian`), `formId` (fallback Typeform), `tipsDoc` (Google Docs URL).
+Optional params: `lastName`, `email_manual`, `first_name_manual`, `language` (`english`|`russian`|`italian`), `formId` (fallback Typeform), `tipsDoc` (Google Docs URL).
+
+`email_manual` and `first_name_manual` are optional fallbacks. Typeform collects
+`email` and `firstName` as hidden fields, but you may also ask the candidate to
+re-enter them. The function uses whichever values are valid – both pairs can be
+empty.
 
 MIT © Starjourney

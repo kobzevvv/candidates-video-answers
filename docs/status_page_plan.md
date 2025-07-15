@@ -1,6 +1,11 @@
 some time ago we (you and me) built cool google cloud function that helps me with candidates management
 
-it creates interview in hireflix after typefrom redirect.
+it creates interview in hireflix after typeform redirect.
+
+`email_manual` and `first_name_manual` are optional backups. The Typeform stores
+`email` and `firstName` as hidden fields, but sometimes we ask the candidate to
+re-enter them. The function accepts both versions and uses whichever is valid —
+either or both can be empty.
 
 here is it:
 
