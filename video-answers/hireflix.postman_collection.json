@@ -14,7 +14,7 @@
 				"header": [
 					{
 						"key": "x-api-key",
-						"value": "d41af738-8526-4703-841f-6c4aaf03206a",
+						"value": "{{HIREFLIX_API_KEY}}",
 						"type": "text"
 					},
 					{
@@ -54,7 +54,7 @@
 				"header": [
 					{
 						"key": "x-api-key",
-						"value": "d41af738-8526-4703-841f-6c4aaf03206a",
+						"value": "{{HIREFLIX_API_KEY}}",
 						"type": "text"
 					},
 					{
@@ -94,7 +94,7 @@
 				"header": [
 					{
 						"key": "x-api-key",
-						"value": "d41af738-8526-4703-841f-6c4aaf03206a",
+						"value": "{{HIREFLIX_API_KEY}}",
 						"type": "text"
 					},
 					{
@@ -134,7 +134,7 @@
 				"header": [
 					{
 						"key": "x-api-key",
-						"value": "d41af738-8526-4703-841f-6c4aaf03206a",
+						"value": "{{HIREFLIX_API_KEY}}",
 						"type": "text"
 					},
 					{
@@ -174,7 +174,7 @@
 				"header": [
 					{
 						"key": "x-api-key",
-						"value": "d41af738-8526-4703-841f-6c4aaf03206a",
+						"value": "{{HIREFLIX_API_KEY}}",
 						"type": "text"
 					},
 					{
@@ -214,7 +214,7 @@
 				"header": [
 					{
 						"key": "x-api-key",
-						"value": "d41af738-8526-4703-841f-6c4aaf03206a",
+						"value": "{{HIREFLIX_API_KEY}}",
 						"type": "text"
 					},
 					{
@@ -254,7 +254,7 @@
 				"header": [
 					{
 						"key": "x-api-key",
-						"value": "d41af738-8526-4703-841f-6c4aaf03206a",
+						"value": "{{HIREFLIX_API_KEY}}",
 						"type": "text"
 					},
 					{
@@ -294,7 +294,7 @@
 				"header": [
 					{
 						"key": "x-api-key",
-						"value": "d41af738-8526-4703-841f-6c4aaf03206a",
+						"value": "{{HIREFLIX_API_KEY}}",
 						"type": "text"
 					},
 					{
@@ -334,7 +334,7 @@
 				"header": [
 					{
 						"key": "x-api-key",
-						"value": "d41af738-8526-4703-841f-6c4aaf03206a",
+						"value": "{{HIREFLIX_API_KEY}}",
 						"type": "text"
 					},
 					{
