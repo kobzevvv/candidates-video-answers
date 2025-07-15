@@ -8,7 +8,7 @@ module.exports = {
     createFailed:         'Failed to create an interview. Contact dev@starjourney.cc.',
     checkingProfile:      'Checking your profile…',
     redirectingSoon:      'You’ll be redirected to the video interview shortly. The link was also sent to your email.',
-    statusPageTitle:      'Status page',
+    statusPageTitle:      'Next step after quiz: super short video interview',
     asyncInviteLink:      'Invitation to asynchronous video interview (copy sent to your email)',
     bookHumanLink:        'Book interview with human',
     interviewTips:        'Interview tips'
@@ -21,7 +21,7 @@ module.exports = {
     createFailed:         'Не удалось создать интервью. Свяжитесь с dev@starjourney.cc.',
     checkingProfile:      'Проверяем ваш профиль…',
     redirectingSoon:      'Скоро произойдёт переадресация на видео-интервью. Ссылка также отправлена на ваш email.',
-    statusPageTitle:      'Страница статуса',
+    statusPageTitle:      'Следующий шаг после квиза: суперкороткое видеоинтервью',
     asyncInviteLink:      'Ссылка на асинхронное видео-интервью',
     bookHumanLink:        'Записаться на интервью с рекрутером',
     interviewTips:        'Советы по интервью'
@@ -34,7 +34,7 @@ module.exports = {
     createFailed:         'Impossibile creare il colloquio. Contatta dev@starjourney.cc.',
     checkingProfile:      'Verifica del profilo in corso…',
     redirectingSoon:      'Verrai reindirizzato al video-colloquio a breve. Il link è stato inviato anche via email.',
-    statusPageTitle:      'Pagina di stato',
+    statusPageTitle:      'Fase successiva al quiz: intervista video super breve',
     asyncInviteLink:      'Invito al colloquio video asincrono',
     bookHumanLink:        'Prenota un colloquio con una persona',
     interviewTips:        'Consigli per il colloquio'
