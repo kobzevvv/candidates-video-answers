@@ -24,14 +24,17 @@ exports.videoInterviewInvite = async (req, res) => {
   const t = messages[langKey];
 
   const isValidEmail = (e) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e?.trim());
-  const isNonEmpty   = (v) => typeof v === 'string' && v.trim() !== '';
+  const isValidName  = (v) =>
+    typeof v === 'string' &&
+    v.trim() !== '' &&
+    !/^_+$/.test(v.trim());
 
   const email     = isValidEmail(rawEmail)     ? rawEmail.trim()
                  : isValidEmail(email_manual)  ? email_manual.trim()
                  : null;
 
-  const firstName = isNonEmpty(rawFirstName)   ? rawFirstName.trim()
-                 : isNonEmpty(first_name_manual) ? first_name_manual.trim()
+  const firstName = isValidName(rawFirstName)   ? rawFirstName.trim()
+                 : isValidName(first_name_manual) ? first_name_manual.trim()
                  : null;
 
   const redirectFormId = req.query.formId || 'cQjsMu76';
@@ -69,7 +72,7 @@ exports.videoInterviewInvite = async (req, res) => {
   const candidateFields = [
     `email: "${esc(email)}"`,
     `firstName: "${esc(firstName)}"`,
-    isNonEmpty(lastName) ? `lastName: "${esc(lastName.trim())}"` : null
+    isValidName(lastName) ? `lastName: "${esc(lastName.trim())}"` : null
   ].filter(Boolean).join(', ');
 
   const query = `
