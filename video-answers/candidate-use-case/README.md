@@ -41,6 +41,7 @@ gcloud functions deploy video-interview-invite \
   --runtime=nodejs20 \
   --trigger-http \
   --allow-unauthenticated \
+  --no-gen2 \
   --set-env-vars HIREFLIX_API_KEY="$HIREFLIX_API_KEY"
 ```
 
@@ -54,7 +55,7 @@ Optional params: `lastName`, `email_manual`, `first_name_manual`, `language` (`e
 
 `email_manual` and `first_name_manual` are optional fallbacks. Typeform collects
 `email` and `firstName` as hidden fields, but you may also ask the candidate to
-re-enter them. The function uses whichever values are valid – both pairs can be
-empty.
+re-enter them. If the manual values are valid they **override** the originals;
+otherwise the originals are used. Both pairs can be empty.
 
 MIT © Starjourney

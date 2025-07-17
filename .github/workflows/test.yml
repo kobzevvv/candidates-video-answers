@@ -14,3 +14,45 @@ jobs:
           node-version: 20
       - run: npm install
       - run: npm test
+  integration:
+    needs: test
+    runs-on: ubuntu-latest
+    env:
+      FUNCTION_NAME: test-video-interview-invite-${{ github.run_id }}
+      CI_RUN_ID: ${{ github.run_id }}
+      FUNCTION_REGION: europe-west1
+    defaults:
+      run:
+        working-directory: video-answers/candidate-use-case
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 20
+      - uses: google-github-actions/auth@v1
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+      - uses: google-github-actions/setup-gcloud@v1
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+      - name: Deploy test function
+        run: |
+          gcloud functions deploy "$FUNCTION_NAME" \
+            --entry-point=videoInterviewInvite \
+            --runtime=nodejs20 \
+            --trigger-http \
+            --allow-unauthenticated \
+            --no-gen2 \
+            --set-env-vars HIREFLIX_API_KEY=${{ secrets.HIREFLIX_API_KEY }}
+      - name: Get Cloud Function URL
+        run: |
+          echo "Retrieving Cloud Function URL…"
+          URL=$(gcloud functions describe "$FUNCTION_NAME" \
+                --region=${{ env.FUNCTION_REGION }} \
+                --format="value(serviceConfig.uri)")
+          echo "FUNCTION_URL=$URL" >> $GITHUB_ENV
+      - name: Run integration script
+        run: node integration-test.js
+      - name: Delete test function
+        if: always()
+        run: gcloud functions delete "$FUNCTION_NAME" --quiet

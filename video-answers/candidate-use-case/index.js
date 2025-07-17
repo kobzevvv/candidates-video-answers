@@ -39,12 +39,13 @@ exports.videoInterviewInvite = async (req, res) => {
     v.trim() !== '' &&
     !/^_+$/.test(v.trim());
 
-  const email     = isValidEmail(rawEmail)     ? rawEmail.trim()
-                 : isValidEmail(email_manual)  ? email_manual.trim()
+  // Prefer manually entered values if provided and valid
+  const email     = isValidEmail(email_manual)  ? email_manual.trim()
+                 : isValidEmail(rawEmail)       ? rawEmail.trim()
                  : null;
 
-  const firstName = isValidName(rawFirstName)   ? rawFirstName.trim()
-                 : isValidName(first_name_manual) ? first_name_manual.trim()
+  const firstName = isValidName(first_name_manual) ? first_name_manual.trim()
+                 : isValidName(rawFirstName)       ? rawFirstName.trim()
                  : null;
 
   const redirectFormId = req.query.formId || 'cQjsMu76';
