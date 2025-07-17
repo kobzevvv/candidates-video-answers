@@ -6,6 +6,16 @@ function esc(value) {
 }
 
 exports.videoInterviewInvite = async (req, res) => {
+  // Log incoming URL for debugging redirection issues
+  try {
+    const proto = req.headers['x-forwarded-proto'] || req.protocol || 'http';
+    const host  = req.headers['x-forwarded-host'] || req.headers.host || '';
+    const path  = req.originalUrl || req.url || '';
+    const fullUrl = host ? `${proto}://${host}${path}` : path;
+    console.log('Request URL:', fullUrl);
+  } catch (e) {
+    // ignore logging errors
+  }
   // --- Gather & validate inputs ------------------------------------------------
   const {
     email: rawEmail,
@@ -44,14 +54,19 @@ exports.videoInterviewInvite = async (req, res) => {
   const needsRedirect =
     !email ||
     !firstName ||
-    /%|xxx/i.test(rawEmailValue) ||
-    /%|xxx/i.test(rawFirstValue);
+    /%/.test(rawEmailValue) ||
+    /%/.test(rawFirstValue);
 
   if (needsRedirect) {
     const url = `https://form.typeform.com/to/${redirectFormId}` +
       `#first_name=${encodeURIComponent(rawFirstValue)}` +
       `&email=${encodeURIComponent(rawEmailValue)}` +
       `&position_id=${encodeURIComponent(paramPositionId || '')}`;
+    try {
+      console.log('Redirecting to:', url);
+    } catch (e) {
+      // ignore logging errors
+    }
     res.redirect(302, url);
     return;
   }
@@ -111,6 +126,11 @@ exports.videoInterviewInvite = async (req, res) => {
 
   const payload = data?.data?.inviteCandidateToInterview;
   const publicUrl = payload?.url?.public;
+  try {
+    console.log('Interview URL:', publicUrl);
+  } catch (e) {
+    // ignore logging errors
+  }
 
   // --- Handle "already invited" gracefully --------------------------------------
   if (payload?.__typename === 'InterviewAlreadyExistsInPositionError') {
@@ -125,19 +145,24 @@ exports.videoInterviewInvite = async (req, res) => {
   }
 
   // --- Success: render status page ---------------------------------------------
-  const tipsUrl = req.query.tipsDoc ||
-    'https://docs.google.com/document/d/1dTFMB3X7OPbliV9V4a4XAqUjr2zkjm2-SMg_28E7Bd8/edit?tab=t.0#heading=h.9195iyi5xlof';
-
   const html = `<!DOCTYPE html>
-<html><head><meta charset="UTF-8"><title>${t.statusPageTitle}</title></head>
+<html>
+<head><meta charset="UTF-8"><title>Next steps</title></head>
 <body>
-  <h2>${t.statusPageTitle}</h2>
-  <ul>
-    <li><a href="${publicUrl}">${t.asyncInviteLink}</a></li>
-    <li><a href="https://calendly.com/vladimir-hiretechfast/30min">${t.bookHumanLink}</a></li>
-    <li><a href="${tipsUrl}">${t.interviewTips}</a></li>
-  </ul>
-</body></html>`;
+  <h2>✅ You passed the quiz – next steps:</h2>
+  <p><strong>Record a quick video (before our call)</strong></p>
+  <p>Here’s a short set of video questions – nothing fancy, just 2–3 minutes of async answers.</p>
+  <p>👉 <a href="${publicUrl}">Start video interview here</a></p>
+  <p>This helps me tailor our call to what matters most and saves us both time.</p>
+  <p><strong>Book a time for our call</strong></p>
+  <p>Please pick a time that works for you:</p>
+  <p>👉 <a href="https://calendly.com/vladimir-hiretechfast/30min">Book a call here</a></p>
+  <p>Looking forward to speaking with you!<br>
+     — Vladimir<br>
+     <a href="https://www.linkedin.com/in/kobzevvvv/">LinkedIn</a>
+  </p>
+</body>
+</html>`;
 
   res.set('Content-Type', 'text/html');
   res.send(html);
