@@ -7,8 +7,9 @@ async function main() {
     process.exit(1);
   }
 
+  const runId = process.env.CI_RUN_ID || process.env.GITHUB_RUN_ID || Date.now();
   const params = new URLSearchParams({
-    email: 'kobzevvv+some_random_generated_hash@gmail.com',
+    email: `kobzevvv+${runId}@gmail.com`,
     firstName: 'Test',
     positionId: 'test-position'
   });

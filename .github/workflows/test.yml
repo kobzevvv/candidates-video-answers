@@ -17,6 +17,9 @@ jobs:
   integration:
     needs: test
     runs-on: ubuntu-latest
+    env:
+      FUNCTION_NAME: test-video-interview-invite-${{ github.run_id }}
+      CI_RUN_ID: ${{ github.run_id }}
     defaults:
       run:
         working-directory: video-answers/candidate-use-case
@@ -33,7 +36,7 @@ jobs:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
       - name: Deploy test function
         run: |
-          gcloud functions deploy test-video-interview-invite \
+          gcloud functions deploy "$FUNCTION_NAME" \
             --entry-point=videoInterviewInvite \
             --runtime=nodejs20 \
             --trigger-http \
@@ -43,8 +46,11 @@ jobs:
       - name: Get function URL
         id: geturl
         run: |
-          echo "url=$(gcloud functions describe test-video-interview-invite --format='value(serviceConfig.uri)')" >> "$GITHUB_OUTPUT"
+          echo "url=$(gcloud functions describe \"$FUNCTION_NAME\" --format='value(serviceConfig.uri)')" >> "$GITHUB_OUTPUT"
       - name: Run integration script
         run: node integration-test.js
         env:
           FUNCTION_URL: ${{ steps.geturl.outputs.url }}
+      - name: Delete test function
+        if: always()
+        run: gcloud functions delete "$FUNCTION_NAME" --quiet
