@@ -20,6 +20,7 @@ jobs:
     env:
       FUNCTION_NAME: test-video-interview-invite-${{ github.run_id }}
       CI_RUN_ID: ${{ github.run_id }}
+      FUNCTION_REGION: europe-west1
     defaults:
       run:
         working-directory: video-answers/candidate-use-case
@@ -43,13 +44,15 @@ jobs:
             --allow-unauthenticated \
             --no-gen2 \
             --set-env-vars HIREFLIX_API_KEY=${{ secrets.HIREFLIX_API_KEY }}
-      - name: Get function URL
-        id: geturl
-        run: echo "url=$(gcloud functions describe \"$FUNCTION_NAME\" --format='value(httpsTrigger.url)')" >> "$GITHUB_OUTPUT"
+      - name: Get Cloud Function URL
+        run: |
+          echo "Retrieving Cloud Function URL…"
+          URL=$(gcloud functions describe "$FUNCTION_NAME" \
+                --region=${{ env.FUNCTION_REGION }} \
+                --format="value(serviceConfig.uri)")
+          echo "FUNCTION_URL=$URL" >> $GITHUB_ENV
       - name: Run integration script
         run: node integration-test.js
-        env:
-          FUNCTION_URL: ${{ steps.geturl.outputs.url }}
       - name: Delete test function
         if: always()
         run: gcloud functions delete "$FUNCTION_NAME" --quiet
