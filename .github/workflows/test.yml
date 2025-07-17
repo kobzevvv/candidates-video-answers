@@ -14,3 +14,36 @@ jobs:
           node-version: 20
       - run: npm install
       - run: npm test
+  integration:
+    needs: test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: video-answers/candidate-use-case
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 20
+      - uses: google-github-actions/auth@v1
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+      - uses: google-github-actions/setup-gcloud@v1
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+      - name: Deploy test function
+        run: |
+          gcloud functions deploy test-video-interview-invite \
+            --entry-point=videoInterviewInvite \
+            --runtime=nodejs20 \
+            --trigger-http \
+            --allow-unauthenticated \
+            --set-env-vars HIREFLIX_API_KEY=${{ secrets.HIREFLIX_API_KEY }}
+      - name: Get function URL
+        id: geturl
+        run: |
+          echo "url=$(gcloud functions describe test-video-interview-invite --format='value(serviceConfig.uri)')" >> "$GITHUB_OUTPUT"
+      - name: Run integration script
+        run: node integration-test.js
+        env:
+          FUNCTION_URL: ${{ steps.geturl.outputs.url }}
