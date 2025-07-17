@@ -45,7 +45,7 @@ jobs:
             --set-env-vars HIREFLIX_API_KEY=${{ secrets.HIREFLIX_API_KEY }}
       - name: Get function URL
         id: geturl
-        run: echo "url=$(gcloud functions describe \"$FUNCTION_NAME\" --format='value(serviceConfig.uri)')" >> "$GITHUB_OUTPUT"
+        run: echo "url=$(gcloud functions describe \"$FUNCTION_NAME\" --format='value(httpsTrigger.url)')" >> "$GITHUB_OUTPUT"
       - name: Run integration script
         run: node integration-test.js
         env:
