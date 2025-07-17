@@ -8,7 +8,11 @@ function esc(value) {
 exports.videoInterviewInvite = async (req, res) => {
   // Log incoming URL for debugging redirection issues
   try {
-    console.log('Request URL:', req.originalUrl || req.url);
+    const proto = req.headers['x-forwarded-proto'] || req.protocol || 'http';
+    const host  = req.headers['x-forwarded-host'] || req.headers.host || '';
+    const path  = req.originalUrl || req.url || '';
+    const fullUrl = host ? `${proto}://${host}${path}` : path;
+    console.log('Request URL:', fullUrl);
   } catch (e) {
     // ignore logging errors
   }
