@@ -6,6 +6,12 @@ function esc(value) {
 }
 
 exports.videoInterviewInvite = async (req, res) => {
+  // Log incoming URL for debugging redirection issues
+  try {
+    console.log('Request URL:', req.originalUrl || req.url);
+  } catch (e) {
+    // ignore logging errors
+  }
   // --- Gather & validate inputs ------------------------------------------------
   const {
     email: rawEmail,
@@ -52,6 +58,11 @@ exports.videoInterviewInvite = async (req, res) => {
       `#first_name=${encodeURIComponent(rawFirstValue)}` +
       `&email=${encodeURIComponent(rawEmailValue)}` +
       `&position_id=${encodeURIComponent(paramPositionId || '')}`;
+    try {
+      console.log('Redirecting to:', url);
+    } catch (e) {
+      // ignore logging errors
+    }
     res.redirect(302, url);
     return;
   }
@@ -111,6 +122,11 @@ exports.videoInterviewInvite = async (req, res) => {
 
   const payload = data?.data?.inviteCandidateToInterview;
   const publicUrl = payload?.url?.public;
+  try {
+    console.log('Interview URL:', publicUrl);
+  } catch (e) {
+    // ignore logging errors
+  }
 
   // --- Handle "already invited" gracefully --------------------------------------
   if (payload?.__typename === 'InterviewAlreadyExistsInPositionError') {
