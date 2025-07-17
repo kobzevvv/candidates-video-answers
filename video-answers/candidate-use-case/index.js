@@ -5,6 +5,32 @@ function esc(value) {
   return String(value).replace(/\\/g, '\\\\').replace(/"/g, '\\"');
 }
 
+/**
+ * Validate a name.
+ * A name is considered valid when it:
+ *   • is a non-empty string;
+ *   • is not only underscores;
+ *   • is not a placeholder such as “xxx”, “XXX”, “Xxxxx”, etc.
+ */
+function isValidName(v) {
+  if (typeof v !== 'string') return false;
+
+  const name = v.trim();
+  if (!name || /^_+$/.test(name)) return false;
+
+  // Strip any non-letters to catch placeholders like "xxx/XXX"
+  const lettersOnly = name
+    .normalize('NFD')                // split accented letters
+    .replace(/[\u0300-\u036f]/g, '') // remove diacritics
+    .replace(/[^a-z]/gi, '')          // keep ASCII letters only
+    .toLowerCase();
+
+  // Reject if the result is 3+ x’s and nothing else (e.g. “xxx”, “xxxxx”)
+  if (/^x{3,}$/.test(lettersOnly)) return false;
+
+  return true;
+}
+
 exports.videoInterviewInvite = async (req, res) => {
   // Log incoming URL for debugging redirection issues
   try {
@@ -16,6 +42,7 @@ exports.videoInterviewInvite = async (req, res) => {
   } catch (e) {
     // ignore logging errors
   }
+
   // --- Gather & validate inputs ------------------------------------------------
   const {
     email: rawEmail,
@@ -34,16 +61,12 @@ exports.videoInterviewInvite = async (req, res) => {
   const t = messages[langKey];
 
   const isValidEmail = (e) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e?.trim());
-  const isValidName  = (v) =>
-    typeof v === 'string' &&
-    v.trim() !== '' &&
-    !/^_+$/.test(v.trim());
 
   const email     = isValidEmail(rawEmail)     ? rawEmail.trim()
                  : isValidEmail(email_manual)  ? email_manual.trim()
                  : null;
 
-  const firstName = isValidName(rawFirstName)   ? rawFirstName.trim()
+  const firstName = isValidName(rawFirstName)      ? rawFirstName.trim()
                  : isValidName(first_name_manual) ? first_name_manual.trim()
                  : null;
 
