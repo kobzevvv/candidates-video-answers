@@ -54,8 +54,8 @@ exports.videoInterviewInvite = async (req, res) => {
   const needsRedirect =
     !email ||
     !firstName ||
-    /%|xxx/i.test(rawEmailValue) ||
-    /%|xxx/i.test(rawFirstValue);
+    /%/.test(rawEmailValue) ||
+    /%/.test(rawFirstValue);
 
   if (needsRedirect) {
     const url = `https://form.typeform.com/to/${redirectFormId}` +
