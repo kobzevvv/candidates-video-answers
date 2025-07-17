@@ -41,6 +41,7 @@ gcloud functions deploy video-interview-invite \
   --runtime=nodejs20 \
   --trigger-http \
   --allow-unauthenticated \
+  --no-gen2 \
   --set-env-vars HIREFLIX_API_KEY="$HIREFLIX_API_KEY"
 ```
 
