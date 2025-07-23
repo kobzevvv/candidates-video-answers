@@ -10,7 +10,7 @@ function esc(value) {
  * A name is considered valid when it:
  *   • is a non-empty string;
  *   • is not only underscores;
- *   • is not a placeholder such as “xxx”, “XXX”, “Xxxxx”, etc.
+ *   • is not a placeholder such as "xxx", "XXX", "Xxxxx", etc.
  */
 function isValidName(v) {
   if (typeof v !== 'string') return false;
@@ -25,7 +25,7 @@ function isValidName(v) {
     .replace(/[^a-z]/gi, '')          // keep ASCII letters only
     .toLowerCase();
 
-  // Reject if the result is 3+ x’s and nothing else (e.g. “xxx”, “xxxxx”)
+  // Reject if the result is 3+ x's and nothing else (e.g. "xxx", "xxxxx")
   if (/^x{3,}$/.test(lettersOnly)) return false;
 
   return true;
@@ -172,16 +172,12 @@ exports.videoInterviewInvite = async (req, res) => {
 <html>
 <head><meta charset="UTF-8"><title>Next steps</title></head>
 <body>
-  <h2>✅ You passed the quiz – next steps:</h2>
-  <p><strong>Record a quick video (before our call)</strong></p>
-  <p>Here’s a short set of video questions – nothing fancy, just 2–3 minutes of async answers.</p>
-  <p>👉 <a href="${publicUrl}">Start video interview here</a></p>
-  <p>This helps me tailor our call to what matters most and saves us both time.</p>
-  <p><strong>Book a time for our call</strong></p>
-  <p>Please pick a time that works for you:</p>
-  <p>👉 <a href="https://calendly.com/vladimir-hiretechfast/30min">Book a call here</a></p>
-  <p>Looking forward to speaking with you!<br>
-     — Vladimir<br>
+  <h2>✅ Congrats ${firstName}, you passed the quiz.</h2>
+  <p><strong>Next steps:</strong></p>
+  <p><strong>1. Record 3 quick video answers.</strong> <a href="${publicUrl}">Click here to proceed</a></p>
+  <p><strong>2. Interview with the hiring specialist.</strong> You'll get invitation after step one</p>
+  <p>Looking forward to speaking with you,<br>
+     Vladimir<br>
      <a href="https://www.linkedin.com/in/kobzevvvv/">LinkedIn</a>
   </p>
 </body>
