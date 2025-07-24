@@ -7,11 +7,19 @@ module.exports = {
     inviteExists:         'You are already invited. Please check your email or contact dev@starjourney.cc.',
     createFailed:         'Failed to create an interview. Contact dev@starjourney.cc.',
     checkingProfile:      'Checking your profile…',
-    redirectingSoon:      'You’ll be redirected to the video interview shortly. The link was also sent to your email.',
+    redirectingSoon:      'You'll be redirected to the video interview shortly. The link was also sent to your email.',
     statusPageTitle:      'Next step after quiz: super short video interview',
     asyncInviteLink:      'Invitation to asynchronous video interview (copy sent to your email)',
     bookHumanLink:        'Book interview with human',
-    interviewTips:        'Interview tips'
+    interviewTips:        'Interview tips',
+    congratsMessage:      'Congrats [Name], you passed the quiz.',
+    nextStepsTitle:       'Next steps:',
+    step1:                'Record 3 quick video answers.',
+    step1Link:            'Click here to proceed',
+    step2:                'Interview with the hiring specialist. You\'ll get invitation after step one',
+    signatureText:        'Looking forward to speaking with you,',
+    signatureName:        'Vladimir',
+    signatureLinkedIn:    'LinkedIn'
   },
   ru: {
     missingInfo:          'Отсутствует или некорректная информация кандидата (нужны email и имя).',
@@ -24,7 +32,15 @@ module.exports = {
     statusPageTitle:      'Следующий шаг после квиза: суперкороткое видеоинтервью',
     asyncInviteLink:      'Ссылка на асинхронное видео-интервью',
     bookHumanLink:        'Записаться на интервью с рекрутером',
-    interviewTips:        'Советы по интервью'
+    interviewTips:        'Советы по интервью',
+    congratsMessage:      'Поздравляем [Name], вы прошли квиз.',
+    nextStepsTitle:       'Следующие шаги:',
+    step1:                'Запишите 3 коротких видеоответа.',
+    step1Link:            'Нажмите здесь, чтобы продолжить',
+    step2:                'Интервью со специалистом по найму. Вы получите приглашение после первого шага',
+    signatureText:        'С нетерпением жду разговора с вами,',
+    signatureName:        'Владимир',
+    signatureLinkedIn:    'LinkedIn'
   },
   it: {
     missingInfo:          'Informazioni candidato mancanti o non valide (email e nome sono obbligatori).',
@@ -37,6 +53,14 @@ module.exports = {
     statusPageTitle:      'Fase successiva al quiz: intervista video super breve',
     asyncInviteLink:      'Invito al colloquio video asincrono',
     bookHumanLink:        'Prenota un colloquio con una persona',
-    interviewTips:        'Consigli per il colloquio'
+    interviewTips:        'Consigli per il colloquio',
+    congratsMessage:      'Congratulazioni [Name], hai superato il quiz.',
+    nextStepsTitle:       'Prossimi passi:',
+    step1:                'Registra 3 brevi risposte video.',
+    step1Link:            'Clicca qui per procedere',
+    step2:                'Colloquio con lo specialista delle assunzioni. Riceverai l\'invito dopo il primo passo',
+    signatureText:        'Non vedo l\'ora di parlare con te,',
+    signatureName:        'Vladimir',
+    signatureLinkedIn:    'LinkedIn'
   }
 };
