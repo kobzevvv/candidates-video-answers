@@ -168,40 +168,20 @@ exports.videoInterviewInvite = async (req, res) => {
   }
 
   // --- Success: render status page ---------------------------------------------
-  let html;
-  if (langKey === 'ru') {
-    // Russian version
-    html = `<!DOCTYPE html>
+  const html = `<!DOCTYPE html>
 <html>
 <head><meta charset="UTF-8"><title>Next steps</title></head>
 <body>
-  <h2>✅ Поздравляем ${firstName}, вы прошли квиз.</h2>
-  <p><strong>Следующие шаги:</strong></p>
-  <p><strong>1. Запишите 3 коротких видеоответа.</strong> <a href="${publicUrl}">Нажмите здесь, чтобы продолжить</a></p>
-  <p><strong>2. Интервью со специалистом по найму.</strong> Вы получите приглашение после первого шага</p>
-  <p>С нетерпением жду разговора с вами,<br>
-     Владимир<br>
-     <a href="https://www.linkedin.com/in/kobzevvvv/">LinkedIn</a>
+  <h2>✅ ${t.congratsMessage.replace('[Name]', firstName)}</h2>
+  <p><strong>${t.nextStepsTitle}</strong></p>
+  <p><strong>1. ${t.step1}</strong> <a href="${publicUrl}">${t.step1Link}</a></p>
+  <p><strong>2. ${t.step2}</strong></p>
+  <p>${t.signatureText}<br>
+     ${t.signatureName}<br>
+     <a href="https://www.linkedin.com/in/kobzevvvv/">${t.signatureLinkedIn}</a>
   </p>
 </body>
 </html>`;
-  } else {
-    // English version (default)
-    html = `<!DOCTYPE html>
-<html>
-<head><meta charset="UTF-8"><title>Next steps</title></head>
-<body>
-  <h2>✅ Congrats ${firstName}, you passed the quiz.</h2>
-  <p><strong>Next steps:</strong></p>
-  <p><strong>1. Record 3 quick video answers.</strong> <a href="${publicUrl}">Click here to proceed</a></p>
-  <p><strong>2. Interview with the hiring specialist.</strong> You'll get invitation after step one</p>
-  <p>Looking forward to speaking with you,<br>
-     Vladimir<br>
-     <a href="https://www.linkedin.com/in/kobzevvvv/">LinkedIn</a>
-  </p>
-</body>
-</html>`;
-  }
 
   res.set('Content-Type', 'text/html');
   res.send(html);
