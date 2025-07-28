@@ -216,9 +216,9 @@ class HireflixDirectSync {
         console.log(`   Status breakdown:`, statusCounts);
 
         const completedInterviews = rawInterviews.filter(interview => {
-          // Only completed interviews - let's be more flexible with status
+          // Only completed interviews - use actual Hireflix status values
           const status = interview.status;
-          if (!status || (status !== 'COMPLETED' && status !== 'FINISHED' && status !== 'DONE')) {
+          if (!status || status !== 'completed') {
             return false;
           }
           
