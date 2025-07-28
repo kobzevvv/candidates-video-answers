@@ -1,0 +1,115 @@
+name: Sync Hireflix Transcripts
+
+on:
+  workflow_dispatch:
+    inputs:
+      interview_ids:
+        description: 'Comma-separated list of Hireflix interview IDs'
+        required: true
+        type: string
+        default: ''
+      dry_run:
+        description: 'Dry run (fetch but do not save to database)'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  sync-transcripts:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+        cache-dependency-path: scripts/transcript-sync/package.json
+
+    - name: Install dependencies
+      run: |
+        cd scripts/transcript-sync
+        npm install
+
+    - name: Setup database schema
+      env:
+        DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      run: |
+        cd scripts/transcript-sync
+        node setup-database.js
+
+    - name: Validate inputs
+      run: |
+        if [ -z "${{ github.event.inputs.interview_ids }}" ]; then
+          echo "❌ Error: interview_ids input is required"
+          exit 1
+        fi
+        echo "✅ Interview IDs: ${{ github.event.inputs.interview_ids }}"
+        echo "🔧 Dry run: ${{ github.event.inputs.dry_run }}"
+
+    - name: Sync transcripts (Dry Run)
+      if: github.event.inputs.dry_run == 'true'
+      env:
+        HIREFLIX_API_KEY: ${{ secrets.HIREFLIX_API_KEY }}
+        DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        INTERVIEW_IDS: ${{ github.event.inputs.interview_ids }}
+      run: |
+        cd scripts/transcript-sync
+        echo "🧪 DRY RUN MODE - Fetching data but not saving to database"
+        # Create a dry-run version that only fetches and displays data
+        node -e "
+        const HireflixTranscriptSync = require('./sync-transcripts.js');
+        const sync = new HireflixTranscriptSync();
+        
+        async function dryRun() {
+          const interviewIds = process.env.INTERVIEW_IDS.split(',');
+          console.log('🔍 Dry run for interviews:', interviewIds);
+          
+          for (const id of interviewIds) {
+            try {
+              console.log(\`\n📋 Fetching interview \${id}...\`);
+              const data = await sync.getInterview(id.trim());
+              const interview = data.interview;
+              
+              if (interview) {
+                console.log(\`✅ Interview \${interview.id}\`);
+                console.log(\`   Questions: \${interview.questions.length}\`);
+                const withTranscripts = interview.questions.filter(q => q.answer?.transcription?.text).length;
+                console.log(\`   Transcripts: \${withTranscripts}\`);
+                
+                interview.questions.forEach((q, i) => {
+                  const hasTranscript = q.answer?.transcription?.text ? '✅' : '❌';
+                  console.log(\`   Q\${i+1}: \${hasTranscript} \${q.title || 'Untitled'}\`);
+                });
+              } else {
+                console.log(\`❌ Interview \${id} not found\`);
+              }
+            } catch (error) {
+              console.error(\`❌ Error fetching \${id}:\`, error.message);
+            }
+          }
+        }
+        
+        dryRun().catch(console.error);
+        "
+
+    - name: Sync transcripts (Production)
+      if: github.event.inputs.dry_run != 'true'
+      env:
+        HIREFLIX_API_KEY: ${{ secrets.HIREFLIX_API_KEY }}
+        DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        INTERVIEW_IDS: ${{ github.event.inputs.interview_ids }}
+      run: |
+        cd scripts/transcript-sync
+        echo "🚀 PRODUCTION MODE - Syncing to database"
+        node sync-transcripts.js
+
+    - name: Summary
+      run: |
+        echo "## 📊 Sync Summary" >> $GITHUB_STEP_SUMMARY
+        echo "- **Interview IDs:** ${{ github.event.inputs.interview_ids }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Dry Run:** ${{ github.event.inputs.dry_run }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Status:** ✅ Completed" >> $GITHUB_STEP_SUMMARY
