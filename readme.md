@@ -19,6 +19,7 @@ This repository automates the **entire candidate journey** — from clicking "Ap
 
 Each stage is fully automated **from the candidate’s perspective**, while remaining manually controllable from your side for safety and iteration.
 
+
 ---
 
 ## ✅ Status
