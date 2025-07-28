@@ -1,0 +1,177 @@
+name: Sync New Hireflix Transcripts
+
+on:
+  # Manual trigger
+  workflow_dispatch:
+    inputs:
+      force_full_sync:
+        description: 'Force full sync (ignore last sync timestamp)'
+        required: false
+        type: boolean
+        default: false
+  
+  # Automatic schedule - runs every 4 hours
+  schedule:
+    - cron: '0 */4 * * *'  # Every 4 hours
+  
+  # Can also be triggered by other workflows
+  workflow_call:
+
+jobs:
+  sync-new-transcripts:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+        cache-dependency-path: scripts/transcript-sync/package.json
+
+    - name: Install dependencies
+      run: |
+        cd scripts/transcript-sync
+        npm install
+
+    - name: Setup database schema
+      env:
+        DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      run: |
+        cd scripts/transcript-sync
+        node setup-database.js
+
+    - name: Check last sync status
+      env:
+        DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      run: |
+        cd scripts/transcript-sync
+        node -e "
+        const { Client } = require('pg');
+        async function checkLastSync() {
+          const client = new Client({ connectionString: process.env.DATABASE_URL });
+          try {
+            await client.connect();
+            const result = await client.query(\"SELECT last_sync_timestamp FROM sync_metadata WHERE id = 'hireflix_transcript_sync'\");
+            if (result.rows.length > 0) {
+              const lastSync = result.rows[0].last_sync_timestamp;
+              console.log('📅 Last sync:', lastSync);
+              console.log('⏱️  Time since last sync:', Math.round((Date.now() - new Date(lastSync).getTime()) / (1000 * 60)), 'minutes');
+            } else {
+              console.log('📅 No previous sync found - will perform full sync');
+            }
+          } catch (error) {
+            console.log('⚠️  Could not check last sync:', error.message);
+          } finally {
+            await client.end();
+          }
+        }
+        checkLastSync();
+        "
+
+    - name: Sync new transcripts
+      env:
+        HIREFLIX_API_KEY: ${{ secrets.HIREFLIX_API_KEY }}
+        DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        HIREFLIX_POSITION_ID: ${{ secrets.HIREFLIX_POSITION_ID }}
+        FORCE_FULL_SYNC: ${{ github.event.inputs.force_full_sync }}
+      run: |
+        cd scripts/transcript-sync
+        
+        if [ "$FORCE_FULL_SYNC" = "true" ]; then
+          echo "🔄 FORCE FULL SYNC MODE - Clearing last sync timestamp"
+          node -e "
+          const { Client } = require('pg');
+          async function clearLastSync() {
+            const client = new Client({ connectionString: process.env.DATABASE_URL });
+            try {
+              await client.connect();
+              await client.query(\"DELETE FROM sync_metadata WHERE id = 'hireflix_transcript_sync'\");
+              console.log('✅ Cleared last sync timestamp');
+            } catch (error) {
+              console.log('⚠️  Could not clear timestamp:', error.message);
+            } finally {
+              await client.end();
+            }
+          }
+          clearLastSync();
+          "
+        fi
+        
+        echo "🚀 Starting incremental transcript sync..."
+        node incremental-sync.js
+
+    - name: Generate summary
+      if: always()
+      env:
+        DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      run: |
+        cd scripts/transcript-sync
+        
+        echo "## 📊 Sync Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        # Get sync statistics
+        node -e "
+        const { Client } = require('pg');
+        async function generateSummary() {
+          const client = new Client({ connectionString: process.env.DATABASE_URL });
+          try {
+            await client.connect();
+            
+            // Get total interviews
+            const totalResult = await client.query('SELECT COUNT(*) as count FROM interviews');
+            const totalInterviews = totalResult.rows[0].count;
+            
+            // Get interviews with transcripts
+            const transcriptResult = await client.query('SELECT COUNT(DISTINCT interview_id) as count FROM interview_answers WHERE transcription_text IS NOT NULL');
+            const interviewsWithTranscripts = transcriptResult.rows[0].count;
+            
+            // Get last sync time
+            const syncResult = await client.query(\"SELECT last_sync_timestamp FROM sync_metadata WHERE id = 'hireflix_transcript_sync'\");
+            const lastSync = syncResult.rows.length > 0 ? syncResult.rows[0].last_sync_timestamp : null;
+            
+            // Get total questions and answers
+            const questionsResult = await client.query('SELECT COUNT(*) as count FROM interview_questions');
+            const totalQuestions = questionsResult.rows[0].count;
+            
+            const answersResult = await client.query('SELECT COUNT(*) as count FROM interview_answers WHERE transcription_text IS NOT NULL');
+            const totalTranscripts = answersResult.rows[0].count;
+            
+            console.log('**Database Statistics:**');
+            console.log('- Total Interviews:', totalInterviews);
+            console.log('- Interviews with Transcripts:', interviewsWithTranscripts);
+            console.log('- Total Questions:', totalQuestions);  
+            console.log('- Total Transcripts:', totalTranscripts);
+            console.log('- Last Sync:', lastSync ? new Date(lastSync).toISOString() : 'Never');
+            console.log('');
+            console.log('**Trigger:** ${{ github.event_name }}');
+            if ('${{ github.event.inputs.force_full_sync }}' === 'true') {
+              console.log('**Mode:** Force Full Sync');
+            } else {
+              console.log('**Mode:** Incremental Sync');
+            }
+            
+          } catch (error) {
+            console.log('⚠️  Could not generate summary:', error.message);
+          } finally {
+            await client.end();
+          }
+        }
+        generateSummary();
+        " >> $GITHUB_STEP_SUMMARY
+
+    - name: Notify on failure
+      if: failure()
+      run: |
+        echo "## ❌ Sync Failed" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "The transcript sync job failed. Check the logs above for details." >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Common issues:**" >> $GITHUB_STEP_SUMMARY
+        echo "- Missing or invalid HIREFLIX_API_KEY" >> $GITHUB_STEP_SUMMARY
+        echo "- Database connection issues" >> $GITHUB_STEP_SUMMARY
+        echo "- Hireflix API rate limits or downtime" >> $GITHUB_STEP_SUMMARY

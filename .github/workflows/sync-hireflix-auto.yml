@@ -1,0 +1,250 @@
+name: Auto Sync Hireflix Transcripts
+
+on:
+  # Manual trigger with full control
+  workflow_dispatch:
+    inputs:
+      position_ids:
+        description: 'Position IDs to sync (comma-separated). Leave empty to use HIREFLIX_POSITION_ID env var'
+        required: false
+        type: string
+        default: ''
+      sync_mode:
+        description: 'Sync mode'
+        required: true
+        type: choice
+        options:
+          - 'incremental'
+          - 'full'
+          - 'dry-run'
+        default: 'incremental'
+  
+  # Automatic schedule - runs every 4 hours (incremental only)
+  schedule:
+    - cron: '0 */4 * * *'  # Every 4 hours
+
+jobs:
+  sync-transcripts:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+        cache-dependency-path: scripts/transcript-sync/package.json
+
+    - name: Install dependencies
+      run: |
+        cd scripts/transcript-sync
+        npm install
+
+    - name: Setup database schema
+      env:
+        DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      run: |
+        cd scripts/transcript-sync
+        node setup-database.js
+
+    - name: Determine sync parameters
+      id: params
+      run: |
+        # Determine position IDs
+        if [ -n "${{ github.event.inputs.position_ids }}" ]; then
+          echo "POSITION_IDS=${{ github.event.inputs.position_ids }}" >> $GITHUB_ENV
+          echo "position_ids=${{ github.event.inputs.position_ids }}" >> $GITHUB_OUTPUT
+        else
+          echo "Using HIREFLIX_POSITION_ID from secrets"
+          echo "position_ids=from_env" >> $GITHUB_OUTPUT
+        fi
+        
+        # Determine sync mode
+        if [ "${{ github.event.inputs.sync_mode }}" = "full" ]; then
+          echo "FORCE_FULL_SYNC=true" >> $GITHUB_ENV
+          echo "sync_mode=full" >> $GITHUB_OUTPUT
+        elif [ "${{ github.event.inputs.sync_mode }}" = "dry-run" ]; then
+          echo "sync_mode=dry-run" >> $GITHUB_OUTPUT
+        else
+          echo "sync_mode=incremental" >> $GITHUB_OUTPUT
+        fi
+        
+        # For scheduled runs, always use incremental
+        if [ "${{ github.event_name }}" = "schedule" ]; then
+          echo "sync_mode=incremental" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Show sync plan
+      run: |
+        echo "🎯 Sync Plan"
+        echo "============"
+        echo "Trigger: ${{ github.event_name }}"
+        echo "Mode: ${{ steps.params.outputs.sync_mode }}"
+        echo "Position IDs: ${{ steps.params.outputs.position_ids }}"
+        echo ""
+
+    - name: Check last sync status
+      env:
+        DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      run: |
+        cd scripts/transcript-sync
+        echo "📅 Checking last sync status..."
+        node -e "
+        const { Client } = require('pg');
+        async function checkLastSync() {
+          const client = new Client({ connectionString: process.env.DATABASE_URL });
+          try {
+            await client.connect();
+            const result = await client.query(\"SELECT last_sync_timestamp FROM sync_metadata WHERE id = 'hireflix_transcript_sync'\");
+            if (result.rows.length > 0) {
+              const lastSync = result.rows[0].last_sync_timestamp;
+              const timeSince = Math.round((Date.now() - new Date(lastSync).getTime()) / (1000 * 60));
+              console.log('Last sync:', lastSync);
+              console.log('Time since last sync:', timeSince, 'minutes');
+            } else {
+              console.log('No previous sync found');
+            }
+          } catch (error) {
+            console.log('Could not check last sync:', error.message);
+          } finally {
+            await client.end();
+          }
+        }
+        checkLastSync();
+        "
+
+    - name: Dry Run Mode
+      if: steps.params.outputs.sync_mode == 'dry-run'
+      env:
+        HIREFLIX_API_KEY: ${{ secrets.HIREFLIX_API_KEY }}
+        DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        HIREFLIX_POSITION_ID: ${{ secrets.HIREFLIX_POSITION_ID }}
+      run: |
+        cd scripts/transcript-sync
+        echo "🧪 DRY RUN MODE - No changes will be saved"
+        echo "=========================================="
+        
+        # Create a dry-run version that only shows what would be synced
+        node -e "
+        const HireflixDirectSync = require('./hireflix-sync.js');
+        
+        async function dryRun() {
+          const sync = new HireflixDirectSync();
+          
+          try {
+            const positionIds = process.env.POSITION_IDS ? 
+              process.env.POSITION_IDS.split(',').map(id => id.trim()) : null;
+              
+            const lastSync = await sync.getLastSyncTimestamp();
+            
+            console.log('📋 Dry run - showing interviews that would be synced:');
+            console.log('');
+            
+            const interviews = await sync.getCompletedInterviewsFromHireflix(positionIds, lastSync);
+            
+            if (interviews.length === 0) {
+              console.log('✅ No new interviews would be synced');
+            } else {
+              console.log(\`📊 Would sync \${interviews.length} interviews:\`);
+              interviews.forEach((interview, i) => {
+                const name = interview.candidateInfo.firstName ? 
+                  \`\${interview.candidateInfo.firstName} (\${interview.candidateInfo.email})\` :
+                  interview.candidateInfo.email || 'Unknown';
+                const transcripts = interview.hasTranscripts ? '✅' : '❌';
+                console.log(\`  \${i+1}. \${interview.id} - \${name} \${transcripts}\`);
+              });
+            }
+          } catch (error) {
+            console.error('Dry run error:', error.message);
+            process.exit(1);
+          }
+        }
+        
+        dryRun();
+        "
+
+    - name: Sync Transcripts (Production)
+      if: steps.params.outputs.sync_mode != 'dry-run'
+      env:
+        HIREFLIX_API_KEY: ${{ secrets.HIREFLIX_API_KEY }}
+        DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        HIREFLIX_POSITION_ID: ${{ secrets.HIREFLIX_POSITION_ID }}
+        FORCE_FULL_SYNC: ${{ env.FORCE_FULL_SYNC }}
+      run: |
+        cd scripts/transcript-sync
+        
+        # Build command arguments
+        ARGS=""
+        if [ -n "${{ github.event.inputs.position_ids }}" ]; then
+          ARGS="${{ github.event.inputs.position_ids }}"
+        fi
+        
+        if [ "${{ steps.params.outputs.sync_mode }}" = "full" ]; then
+          ARGS="$ARGS --full"
+        fi
+        
+        echo "🚀 Running: node hireflix-sync.js $ARGS"
+        node hireflix-sync.js $ARGS
+
+    - name: Generate detailed summary
+      if: always()
+      env:
+        DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      run: |
+        cd scripts/transcript-sync
+        
+        echo "## 📊 Transcript Sync Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "- **Trigger:** ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Mode:** ${{ steps.params.outputs.sync_mode }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Position IDs:** ${{ steps.params.outputs.position_ids }}" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        # Get database statistics
+        node -e "
+        const { Client } = require('pg');
+        async function generateSummary() {
+          const client = new Client({ connectionString: process.env.DATABASE_URL });
+          try {
+            await client.connect();
+            
+            // Get statistics
+            const totalInterviews = await client.query('SELECT COUNT(*) as count FROM interviews');
+            const completedInterviews = await client.query('SELECT COUNT(*) as count FROM interviews WHERE status = \\'completed\\'');
+            const totalTranscripts = await client.query('SELECT COUNT(*) as count FROM interview_answers WHERE transcription_text IS NOT NULL');
+            const lastSync = await client.query(\"SELECT last_sync_timestamp FROM sync_metadata WHERE id = 'hireflix_transcript_sync'\");
+            
+            console.log('### Database Statistics');
+            console.log('');
+            console.log('| Metric | Count |');
+            console.log('|--------|-------|');
+            console.log('| Total Interviews | ' + totalInterviews.rows[0].count + ' |');
+            console.log('| Completed Interviews | ' + completedInterviews.rows[0].count + ' |');
+            console.log('| Total Transcripts | ' + totalTranscripts.rows[0].count + ' |');
+            console.log('| Last Sync | ' + (lastSync.rows.length > 0 ? new Date(lastSync.rows[0].last_sync_timestamp).toISOString() : 'Never') + ' |');
+            console.log('');
+            
+          } catch (error) {
+            console.log('Could not generate summary:', error.message);
+          } finally {
+            await client.end();
+          }
+        }
+        generateSummary();
+        " >> $GITHUB_STEP_SUMMARY
+
+    - name: Notify on failure
+      if: failure()
+      run: |
+        echo "## ❌ Sync Failed" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "Check the logs above for error details." >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### Common Issues:" >> $GITHUB_STEP_SUMMARY
+        echo "- Missing HIREFLIX_API_KEY or DATABASE_URL secrets" >> $GITHUB_STEP_SUMMARY
+        echo "- Invalid position ID" >> $GITHUB_STEP_SUMMARY
+        echo "- Hireflix API rate limits" >> $GITHUB_STEP_SUMMARY
+        echo "- Database connection issues" >> $GITHUB_STEP_SUMMARY
