@@ -160,30 +160,26 @@ class HireflixDirectSync {
       console.log(`📋 Checking position: ${positionId}`);
       
       const query = `
-        query GetInterviews($positionId: ID!, $limit: Int) {
+        query GetInterviews($positionId: String!) {
           position(id: $positionId) {
             id
             name
-            interviews(first: $limit, orderBy: { field: UPDATED_AT, direction: DESC }) {
-              edges {
-                node {
+            interviews(orderBy: { field: updatedAt, direction: desc }) {
+              id
+              status
+              createdAt
+              updatedAt
+              candidate {
+                email
+                firstName
+                lastName
+              }
+              questions {
+                id
+                answer {
                   id
-                  status
-                  createdAt
-                  updatedAt
-                  candidate {
-                    email
-                    firstName
-                    lastName
-                  }
-                  questions {
-                    id
-                    answer {
-                      id
-                      transcription {
-                        text
-                      }
-                    }
+                  transcription {
+                    text
                   }
                 }
               }
@@ -193,7 +189,7 @@ class HireflixDirectSync {
       `;
 
       try {
-        const data = await this.fetchHireflixData(query, { positionId, limit });
+        const data = await this.fetchHireflixData(query, { positionId });
         
         if (!data.position) {
           console.log(`⚠️  Position ${positionId} not found or no access`);
@@ -203,12 +199,12 @@ class HireflixDirectSync {
         const positionName = data.position.name || 'Unknown';
         console.log(`   Position: "${positionName}"`);
 
-        if (!data.position.interviews?.edges) {
+        if (!data.position.interviews || !Array.isArray(data.position.interviews)) {
           console.log(`   No interviews found`);
           continue;
         }
 
-        const rawInterviews = data.position.interviews.edges.map(edge => edge.node);
+        const rawInterviews = data.position.interviews;
         console.log(`   Total interviews: ${rawInterviews.length}`);
 
         // Debug: Show status breakdown
