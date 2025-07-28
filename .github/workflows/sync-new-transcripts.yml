@@ -166,7 +166,7 @@ jobs:
         fi
         
         echo "🚀 Starting incremental transcript sync..."
-        node incremental-sync.js
+        node hireflix-sync.js
 
     - name: Generate summary
       if: always()
