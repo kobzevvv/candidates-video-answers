@@ -278,7 +278,7 @@ class HireflixDirectSync {
 
   async getInterview(interviewId) {
     const query = `
-      query GetInterview($id: ID!) {
+      query GetInterview($id: String!) {
         interview(id: $id) {
           id
           questions {
