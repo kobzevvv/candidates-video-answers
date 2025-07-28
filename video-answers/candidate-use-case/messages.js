@@ -7,7 +7,7 @@ module.exports = {
     inviteExists:         'You are already invited. Please check your email or contact dev@starjourney.cc.',
     createFailed:         'Failed to create an interview. Contact dev@starjourney.cc.',
     checkingProfile:      'Checking your profile…',
-    redirectingSoon:      'You'll be redirected to the video interview shortly. The link was also sent to your email.',
+    redirectingSoon:      'You\'ll be redirected to the video interview shortly. The link was also sent to your email.',
     statusPageTitle:      'Next step after quiz: super short video interview',
     asyncInviteLink:      'Invitation to asynchronous video interview (copy sent to your email)',
     bookHumanLink:        'Book interview with human',
