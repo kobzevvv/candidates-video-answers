@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
     inputs:
       position_ids:
-        description: 'Position IDs to sync (comma-separated). Leave empty to use HIREFLIX_POSITION_ID env var'
+        description: 'Position IDs to sync (comma-separated). Leave empty to auto-discover all positions'
         required: false
         type: string
         default: ''
@@ -18,6 +18,11 @@ on:
           - 'full'
           - 'dry-run'
         default: 'incremental'
+      include_archived:
+        description: 'Include archived positions when auto-discovering'
+        required: false
+        type: boolean
+        default: false
   
   # Automatic schedule - runs every 4 hours (incremental only)
   schedule:

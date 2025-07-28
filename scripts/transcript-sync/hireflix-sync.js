@@ -91,7 +91,48 @@ class HireflixDirectSync {
     }
   }
 
-  async getCompletedInterviewsFromHireflix(positionIds, sinceTimestamp = null, limit = 100) {
+  async getAllPositions(includeArchived = false) {
+    const query = `
+      query GetAllPositions {
+        positions {
+          id
+          name
+          archived
+        }
+      }
+    `;
+
+    try {
+      console.log('🔍 Fetching all positions from Hireflix...');
+      const data = await this.fetchHireflixData(query);
+      
+      if (!data.positions) {
+        console.log('⚠️  No positions found or no access');
+        return [];
+      }
+
+      let positions = data.positions;
+      
+      // Filter out archived positions unless requested
+      if (!includeArchived) {
+        positions = positions.filter(p => !p.archived);
+      }
+
+      console.log(`📋 Found ${positions.length} position(s):`);
+      positions.forEach(pos => {
+        const status = pos.archived ? '[ARCHIVED]' : '[ACTIVE]';
+        console.log(`   ${status} ${pos.name} (${pos.id})`);
+      });
+
+      return positions.map(p => p.id);
+
+    } catch (error) {
+      console.error('❌ Error fetching positions:', error.message);
+      return [];
+    }
+  }
+
+  async getCompletedInterviewsFromHireflix(positionIds, sinceTimestamp = null, limit = 100, includeArchived = false) {
     const allInterviews = [];
     
     // Handle single position ID or array
@@ -99,13 +140,17 @@ class HireflixDirectSync {
       positionIds = [positionIds];
     }
     
-    // If no position IDs provided, try environment variable
+    // If no position IDs provided, try environment variable, then auto-discover
     if (!positionIds || positionIds.length === 0) {
       const defaultPositionId = process.env.HIREFLIX_POSITION_ID;
-      if (defaultPositionId) {
-        positionIds = defaultPositionId.split(',').map(id => id.trim());
+      if (defaultPositionId && defaultPositionId.trim()) {
+        positionIds = defaultPositionId.split(',').map(id => id.trim()).filter(Boolean);
       } else {
-        throw new Error('No position IDs provided. Set HIREFLIX_POSITION_ID or pass as parameter.');
+        console.log('📡 No position IDs specified, auto-discovering from Hireflix...');
+        positionIds = await this.getAllPositions(includeArchived);
+        if (positionIds.length === 0) {
+          throw new Error('No positions found. Check your Hireflix API access.');
+        }
       }
     }
 
@@ -334,7 +379,7 @@ class HireflixDirectSync {
     }
   }
 
-  async syncNewTranscripts(positionIds = null, forceFullSync = false) {
+  async syncNewTranscripts(positionIds = null, forceFullSync = false, includeArchived = false) {
     try {
       console.log('🚀 Starting Hireflix transcript sync...');
       
@@ -349,7 +394,9 @@ class HireflixDirectSync {
 
       const completedInterviews = await this.getCompletedInterviewsFromHireflix(
         positionIds, 
-        lastSync
+        lastSync,
+        100,
+        includeArchived
       );
 
       if (completedInterviews.length === 0) {
@@ -413,6 +460,7 @@ class HireflixDirectSync {
 async function main() {
   const args = process.argv.slice(2);
   const forceFullSync = args.includes('--full') || process.env.FORCE_FULL_SYNC === 'true';
+  const includeArchived = args.includes('--include-archived');
   
   // Extract position IDs from args (remove flags)
   const positionIds = args.filter(arg => !arg.startsWith('--'));
@@ -425,6 +473,8 @@ async function main() {
     
     if (positionIds.length > 0) {
       console.log(`📋 Position IDs: ${positionIds.join(', ')}`);
+    } else {
+      console.log('📡 Will auto-discover positions from Hireflix');
     }
     
     if (forceFullSync) {
@@ -433,9 +483,14 @@ async function main() {
       console.log('🔄 Mode: Incremental sync');
     }
     
+    if (includeArchived) {
+      console.log('📦 Including archived positions');
+    }
+    
     const result = await sync.syncNewTranscripts(
       positionIds.length > 0 ? positionIds : null,
-      forceFullSync
+      forceFullSync,
+      includeArchived
     );
     
     if (result.errors.length > 0) {
