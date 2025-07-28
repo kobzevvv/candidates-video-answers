@@ -10,13 +10,14 @@ Go to your GitHub repository → Settings → Secrets and variables → Actions:
 
 - `DATABASE_URL` - Your Neon database connection string
 - `HIREFLIX_API_KEY` - Your Hireflix API key  
-- `HIREFLIX_POSITION_ID` - Your position ID(s), comma-separated
+- `HIREFLIX_POSITION_ID` - (Optional) Your position ID(s), comma-separated
 
 ### 2. That's it!
 
 The system will automatically:
+- **Auto-discover all your positions** if no specific position IDs are set
 - Run every 4 hours to sync new transcripts
-- Only process completed interviews
+- Only process completed interviews (active positions only)
 - Skip interviews already synced
 - Store transcripts with word-level timestamps
 
@@ -27,11 +28,12 @@ The system will automatically:
 1. Go to **Actions** → "Auto Sync Hireflix Transcripts"
 2. Click **Run workflow**
 3. Choose options:
-   - **Position IDs**: Leave empty to use your default, or specify specific ones
+   - **Position IDs**: Leave empty to auto-discover all positions, or specify specific ones
    - **Sync Mode**: 
      - `incremental` - Only new interviews since last sync
      - `full` - All completed interviews (ignores last sync time)
      - `dry-run` - Show what would be synced without saving
+   - **Include Archived**: Check to include archived positions when auto-discovering
 4. Click **Run workflow**
 
 ### Local Development
@@ -47,14 +49,20 @@ cp .env.example .env
 # Setup database (first time only)
 node setup-database.js
 
-# Sync new transcripts
+# Sync new transcripts (auto-discovers all active positions)
 node hireflix-sync.js
 
-# Full sync (all interviews)
+# Full sync (all interviews, ignoring timestamps)
 node hireflix-sync.js --full
+
+# Include archived positions when auto-discovering
+node hireflix-sync.js --include-archived
 
 # Sync specific positions only
 node hireflix-sync.js POSITION_ID_1 POSITION_ID_2
+
+# Combine options
+node hireflix-sync.js --full --include-archived
 ```
 
 ## How It Works

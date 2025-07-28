@@ -255,6 +255,10 @@ jobs:
           ARGS="$ARGS --full"
         fi
         
+        if [ "${{ github.event.inputs.include_archived }}" = "true" ]; then
+          ARGS="$ARGS --include-archived"
+        fi
+        
         echo "🚀 Running: node hireflix-sync.js $ARGS"
         node hireflix-sync.js $ARGS
 
