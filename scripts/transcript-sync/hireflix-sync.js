@@ -211,9 +211,20 @@ class HireflixDirectSync {
         const rawInterviews = data.position.interviews.edges.map(edge => edge.node);
         console.log(`   Total interviews: ${rawInterviews.length}`);
 
+        // Debug: Show status breakdown
+        const statusCounts = {};
+        rawInterviews.forEach(interview => {
+          const status = interview.status || 'NULL';
+          statusCounts[status] = (statusCounts[status] || 0) + 1;
+        });
+        console.log(`   Status breakdown:`, statusCounts);
+
         const completedInterviews = rawInterviews.filter(interview => {
-          // Only completed interviews
-          if (interview.status !== 'COMPLETED') return false;
+          // Only completed interviews - let's be more flexible with status
+          const status = interview.status;
+          if (!status || (status !== 'COMPLETED' && status !== 'FINISHED' && status !== 'DONE')) {
+            return false;
+          }
           
           // Filter by timestamp if provided
           if (sinceTimestamp) {
@@ -246,6 +257,18 @@ class HireflixDirectSync {
 
         const withTranscripts = interviewsWithData.filter(i => i.hasTranscripts).length;
         console.log(`   With transcripts: ${withTranscripts}`);
+        
+        // Debug: Show some interview details
+        if (completedInterviews.length > 0) {
+          const sample = completedInterviews[0];
+          console.log(`   Sample interview:`, {
+            id: sample.id,
+            status: sample.status,
+            questionsCount: sample.questions?.length || 0,
+            hasAnswers: sample.questions?.some(q => q.answer) || false,
+            hasTranscription: sample.questions?.some(q => q.answer?.transcription?.text) || false
+          });
+        }
         
         allInterviews.push(...interviewsWithData);
 
