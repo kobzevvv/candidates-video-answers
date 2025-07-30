@@ -69,13 +69,13 @@ jobs:
         cd scripts/transcript-sync
         
         echo "🧪 Running evaluation test on interview: 688734e38fb4bc64261bffe0"
-        echo "📊 Using GPT model: google/gemini-1.5-flash"
+        echo "📊 Using GPT model: openai/gpt-4o-mini"
         echo "⏱️  Using 10-second delay between requests to avoid rate limits"
         echo "🎯 This is a CI/CD test run"
         echo ""
         
         # Run evaluation for the test interview
-        node evaluate-by-interview.js "688734e38fb4bc64261bffe0" "google/gemini-1.5-flash"
+        node evaluate-by-interview.js "688734e38fb4bc64261bffe0" "openai/gpt-4o-mini"
         
         # Check if evaluation was successful
         if [ $? -eq 0 ]; then

@@ -23,7 +23,7 @@ on:
           - 'microsoft/phi-3.5'       # 💰⚡ Cheap & Fast
           - 'openai/gpt-4o'          # 💸 Higher quality
           - 'openai/gpt-4.1'         # 💸 Highest quality
-        default: 'google/gemini-1.5-flash'
+        default: 'openai/gpt-4o-mini'
       skip_evaluated:
         description: 'Skip already evaluated answers and re-do all'
         required: false
