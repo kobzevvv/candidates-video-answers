@@ -13,6 +13,9 @@ jobs:
   test-evaluation:
     runs-on: ubuntu-latest
     name: Test AI Evaluation System
+    permissions:
+      contents: read
+      statuses: write
     
     # Skip if commit message contains [skip ci]
     if: "!contains(github.event.head_commit.message, '[skip ci]')"
