@@ -40,7 +40,16 @@ jobs:
         node-version: '18'
         
     - name: Install dependencies
-      run: npm run install:all
+      run: |
+        echo "📦 Installing dependencies in ai-evaluation..."
+        cd ai-evaluation
+        npm install
+        cd ..
+        echo "📦 Installing dependencies in scripts/transcript-sync..."
+        cd scripts/transcript-sync
+        npm install
+        cd ..
+        echo "✅ All dependencies installed"
         
     - name: Validate inputs
       run: |
