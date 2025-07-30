@@ -1,0 +1,13 @@
+{
+  "name": "starjourney-n8n",
+  "version": "1.0.0",
+  "description": "AI-powered candidate evaluation system",
+  "scripts": {
+    "install:all": "cd ai-evaluation && npm install && cd ../scripts/transcript-sync && npm install",
+    "evaluate:position": "cd scripts/transcript-sync && node evaluate-by-position.js",
+    "evaluate:interview": "cd scripts/transcript-sync && node evaluate-by-interview.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

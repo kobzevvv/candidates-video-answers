@@ -40,9 +40,7 @@ jobs:
         node-version: '18'
         
     - name: Install dependencies
-      run: |
-        cd scripts/transcript-sync
-        npm install
+      run: npm run install:all
         
     - name: Validate inputs
       run: |
