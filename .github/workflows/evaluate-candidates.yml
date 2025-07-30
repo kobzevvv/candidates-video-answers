@@ -16,11 +16,31 @@ on:
         required: false
         type: choice
         options:
-          - 'gpt-4o-mini'                     # 💰 Fast & cost-effective (DEFAULT)
-          - 'gpt-4o'                          # 🎯 Most capable for complex tasks
-          - 'openai/gpt-4o-mini'              # Same as gpt-4o-mini (with prefix)
-          - 'openai/gpt-4o'                   # Same as gpt-4o (with prefix)
-        default: 'gpt-4o-mini'
+          # Google Models
+          - 'google/gemini-1.5-flash'              # ⚡ Fast & efficient (DEFAULT)
+          - 'google/gemini-1.5-pro'                # 📚 Large context (1M tokens)
+          
+          # OpenAI Models  
+          - 'gpt-4o'                               # 🎯 High quality, complex tasks
+          - 'gpt-4o-mini'                          # 💰 Cost-effective, good balance
+          
+          # Anthropic Models
+          - 'claude-3-5-sonnet-latest'             # 🔍 Excellent analysis & reasoning
+          - 'claude-3-haiku'                       # ⚡ Fast Claude model
+          
+          # Meta Models (Open Source)
+          - 'meta-llama/llama-3.1-405b-instruct'   # 🏆 Largest open model
+          - 'meta-llama/llama-3.1-70b-instruct'    # 🌐 Powerful open model
+          - 'meta-llama/llama-3.1-8b-instruct'     # 🪶 Lightweight option
+          
+          # Mistral Models
+          - 'mistral/mistral-large-2407'           # 🇪🇺 European, flagship model
+          - 'mistral/mistral-small-2409'           # ⚡ Efficient Mistral
+          
+          # Cohere Models
+          - 'cohere/command-r-plus'                # 🔧 Advanced RAG & tools
+          - 'cohere/command-r'                     # 📊 Efficient RAG
+        default: 'google/gemini-1.5-flash'
       skip_evaluated:
         description: 'Skip already evaluated answers and re-do all'
         required: false

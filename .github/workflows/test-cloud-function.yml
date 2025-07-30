@@ -41,7 +41,7 @@ jobs:
             "interview_id": "test",
             "question": "What is your experience?",
             "answer": "I have 5 years of experience in software development",
-            "gpt_model": "google/gemini-1.5-flash"
+            "gpt_model": "gpt-4o-mini"
           }' \
           "${CLOUD_FUNCTION_URL}")
         
