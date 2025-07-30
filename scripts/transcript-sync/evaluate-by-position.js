@@ -6,8 +6,14 @@ const axios = require('axios');
 const { InterviewDataModel, createTables } = require('../../ai-evaluation/data-model');
 
 const CLOUD_FUNCTION_URL = process.env.CLOUD_FUNCTION_URL;
+const RATE_LIMIT_DELAY = process.env.RATE_LIMIT_DELAY ? parseInt(process.env.RATE_LIMIT_DELAY) : 3000; // Default 3 seconds
 
 const dataModel = new InterviewDataModel();
+
+// Helper function to add delay between API calls
+async function delay(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
 
 async function evaluateAnswer(candidateId, interviewId, question, answer, gptModel = 'gpt-3.5-turbo') {
   try {
@@ -101,8 +107,10 @@ async function main() {
     let processedCount = 0;
     let skippedCount = 0;
     let errorCount = 0;
+    console.log(`⏱️  Rate limit delay: ${RATE_LIMIT_DELAY}ms between requests`);
 
-    for (const interview of interviews) {
+    for (let i = 0; i < interviews.length; i++) {
+      const interview = interviews[i];
       const { interview_id: interviewId, candidate_email, candidate_first_name, candidate_last_name } = interview;
       
       console.log(`🔍 Processing interview: ${interviewId} for candidate: ${candidate_first_name} ${candidate_last_name} (${candidate_email})`);
@@ -110,7 +118,8 @@ async function main() {
       // Get all question-answer pairs for this interview
       const questionAnswers = await dataModel.getInterviewAnswers(interviewId);
       
-      for (const qa of questionAnswers) {
+      for (let j = 0; j < questionAnswers.length; j++) {
+        const qa = questionAnswers[j];
         const { 
           answer_id, 
           question_id, 
@@ -169,6 +178,15 @@ async function main() {
         } else {
           console.log(`❌ Invalid or missing evaluation for answer ${answer_id}`);
           errorCount++;
+        }
+        
+        // Add delay between requests to avoid rate limits
+        // Skip delay if it's the last question in the last interview
+        const isLastQuestion = j === questionAnswers.length - 1;
+        const isLastInterview = i === interviews.length - 1;
+        if (!(isLastQuestion && isLastInterview)) {
+          console.log(`⏳ Waiting ${RATE_LIMIT_DELAY}ms before next request...`);
+          await delay(RATE_LIMIT_DELAY);
         }
       }
     }

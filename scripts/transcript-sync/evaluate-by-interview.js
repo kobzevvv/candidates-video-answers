@@ -8,8 +8,14 @@ const axios = require('axios');
 const { InterviewDataModel, createTables } = require('../../ai-evaluation/data-model');
 
 const CLOUD_FUNCTION_URL = process.env.CLOUD_FUNCTION_URL;
+const RATE_LIMIT_DELAY = process.env.RATE_LIMIT_DELAY ? parseInt(process.env.RATE_LIMIT_DELAY) : 3000; // Default 3 seconds
 
 const dataModel = new InterviewDataModel();
+
+// Helper function to add delay between API calls
+async function delay(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
 
 async function evaluateAnswer(candidateId, interviewId, question, answer, gptModel = 'gpt-3.5-turbo') {
   try {
@@ -108,8 +114,10 @@ async function main() {
 
     let processedCount = 0;
     let errorCount = 0;
+    console.log(`⏱️  Rate limit delay: ${RATE_LIMIT_DELAY}ms between requests`);
 
-    for (const qa of questionAnswers) {
+    for (let i = 0; i < questionAnswers.length; i++) {
+      const qa = questionAnswers[i];
       const { 
         answer_id, 
         question_id, 
@@ -159,6 +167,12 @@ async function main() {
       } else {
         console.log(`❌ Invalid or missing evaluation for answer ${answer_id}`);
         errorCount++;
+      }
+      
+      // Add delay between requests to avoid rate limits (except for the last one)
+      if (i < questionAnswers.length - 1) {
+        console.log(`⏳ Waiting ${RATE_LIMIT_DELAY}ms before next request...`);
+        await delay(RATE_LIMIT_DELAY);
       }
     }
 
