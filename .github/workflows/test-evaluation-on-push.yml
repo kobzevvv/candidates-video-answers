@@ -41,6 +41,15 @@ jobs:
         cd scripts/transcript-sync
         npm install
         
+    - name: Test Cloud Function directly
+      env:
+        CLOUD_FUNCTION_URL: ${{ secrets.CLOUD_FUNCTION_URL }}
+      run: |
+        cd scripts/transcript-sync
+        echo "🔍 Testing cloud function directly first..."
+        node test-cloud-function-direct.js
+        echo ""
+        
     - name: Test evaluation with specific interview
       env:
         GITHUB_TOKEN: ${{ secrets.PAT_GIT_HUB }}
