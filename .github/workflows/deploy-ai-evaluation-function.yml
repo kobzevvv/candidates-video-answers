@@ -22,12 +22,12 @@ on:
 
 env:
   FUNCTION_NAME: evaluate-candidate
-  RUNTIME: nodejs18
+  RUNTIME: nodejs20
   ENTRY_POINT: evaluateCandidate
   MEMORY: 1GB
   TIMEOUT: 300s
   MIN_INSTANCES: 1
-  MAX_INSTANCES: 100
+  MAX_INSTANCES: 15
   CONCURRENCY: 1
 
 jobs:
@@ -41,7 +41,7 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '18'
+        node-version: '20'
         
     - name: Authenticate to Google Cloud
       uses: google-github-actions/auth@v2

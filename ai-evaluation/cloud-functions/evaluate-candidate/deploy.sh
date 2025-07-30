@@ -74,13 +74,15 @@ echo ""
 echo -e "${GREEN}🔄 Deploying Cloud Function...${NC}"
 
 gcloud functions deploy evaluate-candidate \
-    --runtime nodejs18 \
+    --runtime nodejs20 \
     --trigger-http \
     --allow-unauthenticated \
     --entry-point evaluateCandidate \
     --region ${REGION} \
     --timeout 540s \
     --memory 512MB \
+    --min-instances 1 \
+    --max-instances 15 \
     --set-env-vars GITHUB_TOKEN="${GITHUB_TOKEN}" \
     --project ${PROJECT_ID}
 
