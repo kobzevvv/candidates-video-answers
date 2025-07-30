@@ -19,7 +19,9 @@ on:
           - 'openai/gpt-4o-mini'      # 💰⚡ Best value - Fast & Affordable
           - 'openai/gpt-4o'          # 💸 Higher quality
           - 'openai/gpt-4.1'         # 💸💎 Highest quality & fastest
-        default: 'openai/gpt-4o-mini'
+          - 'openai/gpt-3.5-turbo'
+          - 'microsoft/phi-3.5'
+        default: 'microsoft/phi-3.5'
       skip_evaluated:
         description: 'Skip already evaluated answers and re-do all'
         required: false
