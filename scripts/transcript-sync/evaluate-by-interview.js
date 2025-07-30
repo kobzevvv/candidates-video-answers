@@ -17,6 +17,39 @@ async function delay(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+async function evaluateAnswerWithRetry(candidateId, interviewId, question, answer, gptModel = 'gpt-3.5-turbo', maxRetries = 3) {
+  let lastError = null;
+  
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const result = await evaluateAnswer(candidateId, interviewId, question, answer, gptModel);
+      if (result) return result;
+      
+      // If we got null (evaluation failed), don't retry
+      if (!lastError || !lastError.response || lastError.response.status !== 429) {
+        return null;
+      }
+    } catch (error) {
+      lastError = error;
+    }
+    
+    // Check if it's a rate limit error
+    if (lastError && lastError.response && lastError.response.status === 429) {
+      if (attempt < maxRetries) {
+        const backoffDelay = Math.min(30000, 5000 * Math.pow(2, attempt - 1)); // Exponential backoff: 5s, 10s, 20s
+        console.log(`🔄 Rate limit hit. Retrying in ${backoffDelay}ms (attempt ${attempt + 1}/${maxRetries})...`);
+        await delay(backoffDelay);
+      }
+    } else {
+      // For non-rate-limit errors, don't retry
+      return null;
+    }
+  }
+  
+  console.error(`❌ Failed after ${maxRetries} attempts due to rate limits`);
+  return null;
+}
+
 async function evaluateAnswer(candidateId, interviewId, question, answer, gptModel = 'gpt-3.5-turbo') {
   try {
     console.log(`🌐 Calling Cloud Function: ${CLOUD_FUNCTION_URL}`);
@@ -42,6 +75,10 @@ async function evaluateAnswer(candidateId, interviewId, question, answer, gptMod
     if (error.response) {
       console.error(`   HTTP Status: ${error.response.status}`);
       console.error(`   Response data:`, error.response.data);
+      // Re-throw rate limit errors so retry logic can handle them
+      if (error.response.status === 429) {
+        throw error;
+      }
     }
     if (error.request) {
       console.error(`   Request failed - no response received`);
@@ -137,7 +174,7 @@ async function main() {
 
       console.log(`🔍 Re-evaluating answer ${answer_id} for question: "${question_title}"`);
       
-      const evaluation = await evaluateAnswer(candidate_email, interviewId, questionText, transcription_text, gptModel);
+      const evaluation = await evaluateAnswerWithRetry(candidate_email, interviewId, questionText, transcription_text, gptModel);
       console.log(`📊 Evaluation result:`, evaluation ? 'Received response' : 'No response');
       
       if (evaluation) {

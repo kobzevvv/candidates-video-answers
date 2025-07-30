@@ -61,11 +61,13 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.PAT_GIT_HUB }}
         CLOUD_FUNCTION_URL: ${{ secrets.CLOUD_FUNCTION_URL }}
         DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        RATE_LIMIT_DELAY: 10000  # 10 seconds to avoid rate limits
       run: |
         cd scripts/transcript-sync
         
         echo "🧪 Running evaluation test on interview: 688734e38fb4bc64261bffe0"
         echo "📊 Using GPT model: openai/gpt-4o-mini"
+        echo "⏱️  Using 10-second delay between requests to avoid rate limits"
         echo "🎯 This is a CI/CD test run"
         echo ""
         
