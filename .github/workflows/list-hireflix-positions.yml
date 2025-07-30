@@ -1,0 +1,101 @@
+name: List Hireflix Positions
+
+on:
+  # Manual trigger only
+  workflow_dispatch:
+    inputs:
+      include_archived:
+        description: 'Include archived positions in the list'
+        required: false
+        type: boolean
+        default: false
+      output_format:
+        description: 'Output format'
+        required: false
+        type: choice
+        options:
+          - 'table'
+          - 'json'
+          - 'csv'
+        default: 'table'
+
+jobs:
+  list-positions:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+        cache-dependency-path: scripts/transcript-sync/package.json
+
+    - name: Install dependencies
+      run: |
+        cd scripts/transcript-sync
+        npm install
+
+    - name: Setup database schema (for position tracking)
+      env:
+        DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      run: |
+        cd scripts/transcript-sync
+        echo "🔧 Setting up database schema for position tracking..."
+        node -e "
+        const { Client } = require('pg');
+        async function setupPositionTracking() {
+          const client = new Client({ connectionString: process.env.DATABASE_URL });
+          try {
+            await client.connect();
+            console.log('✅ Connected to database');
+            
+            await client.query(\`
+              CREATE TABLE IF NOT EXISTS position_tracking (
+                  id VARCHAR(255) PRIMARY KEY,
+                  name TEXT,
+                  archived BOOLEAN,
+                  first_seen TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+                  last_seen TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+                  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+                  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+              );
+              
+              CREATE INDEX IF NOT EXISTS idx_position_tracking_first_seen ON position_tracking(first_seen);
+              CREATE INDEX IF NOT EXISTS idx_position_tracking_archived ON position_tracking(archived);
+            \`);
+            
+            console.log('✅ Position tracking schema ready');
+          } catch (error) {
+            console.error('❌ Database setup error:', error.message);
+            process.exit(1);
+          } finally {
+            await client.end();
+          }
+        }
+        setupPositionTracking();
+        "
+
+    - name: Fetch and list positions
+      env:
+        HIREFLIX_API_KEY: ${{ secrets.HIREFLIX_API_KEY }}
+        DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        INCLUDE_ARCHIVED: ${{ github.event.inputs.include_archived }}
+        OUTPUT_FORMAT: ${{ github.event.inputs.output_format }}
+      run: |
+        cd scripts/transcript-sync
+        node list-positions.js
+
+    - name: Generate summary
+      if: always()
+      run: |
+        echo "## 📋 Hireflix Positions Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "- **Include Archived:** ${{ github.event.inputs.include_archived }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Output Format:** ${{ github.event.inputs.output_format }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Timestamp:** $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "Check the logs above for the complete position list!" >> $GITHUB_STEP_SUMMARY

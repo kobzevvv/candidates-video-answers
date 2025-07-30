@@ -6,6 +6,7 @@
   "scripts": {
     "sync": "node sync-transcripts.js",
     "sync-auto": "node hireflix-sync.js",
+    "list-positions": "node list-positions.js",
     "setup-db": "node setup-database.js"
   },
   "dependencies": {
