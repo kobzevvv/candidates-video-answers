@@ -20,7 +20,7 @@ async function testCloudFunction() {
     interview_id: 'test-interview',
     question: 'What is your experience with cloud computing?',
     answer: 'I have 5 years of experience working with AWS and Google Cloud Platform, implementing serverless architectures and container orchestration.',
-    gpt_model: 'openai/gpt-4o-mini'
+    gpt_model: 'google/gemini-1.5-flash'
   };
   
   try {

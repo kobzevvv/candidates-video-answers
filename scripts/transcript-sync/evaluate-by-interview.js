@@ -17,7 +17,7 @@ async function delay(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-async function evaluateAnswerWithRetry(candidateId, interviewId, question, answer, gptModel = 'openai/gpt-4o-mini', maxRetries = 3) {
+async function evaluateAnswerWithRetry(candidateId, interviewId, question, answer, gptModel = 'google/gemini-1.5-flash', maxRetries = 3) {
   let lastError = null;
   
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
@@ -50,7 +50,7 @@ async function evaluateAnswerWithRetry(candidateId, interviewId, question, answe
   return null;
 }
 
-async function evaluateAnswer(candidateId, interviewId, question, answer, gptModel = 'openai/gpt-4o-mini') {
+async function evaluateAnswer(candidateId, interviewId, question, answer, gptModel = 'google/gemini-1.5-flash') {
   try {
     console.log(`🌐 Calling Cloud Function: ${CLOUD_FUNCTION_URL}`);
     const response = await axios.post(CLOUD_FUNCTION_URL, {
@@ -100,7 +100,7 @@ async function saveEvaluationResult(result, outputDir) {
 }
 
 async function main() {
-  const [interviewId, gptModel = 'openai/gpt-4o-mini'] = process.argv.slice(2);
+  const [interviewId, gptModel = 'google/gemini-1.5-flash'] = process.argv.slice(2);
   
   if (!interviewId) {
     console.error('Usage: node evaluate-by-interview.js <interview_id> [gpt_model]');

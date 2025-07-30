@@ -29,21 +29,21 @@ async function createTables() {
       const tableInfo = await sql`
         SELECT column_name, data_type 
         FROM information_schema.columns 
-        WHERE table_name = 'ai_evaluation_results' 
+        WHERE table_name = 'video_answers_with_gpt_reviews' 
         AND column_name = 'answer_id'
       `;
       
       if (tableInfo.length > 0 && tableInfo[0].data_type === 'integer') {
-        console.log('🔄 Dropping ai_evaluation_results table to fix data types...');
-        await sql`DROP TABLE IF EXISTS ai_evaluation_results`;
+        console.log('🔄 Dropping video_answers_with_gpt_reviews table to fix data types...');
+        await sql`DROP TABLE IF EXISTS video_answers_with_gpt_reviews`;
       }
     } catch (error) {
       // Table doesn't exist yet, that's fine
     }
 
-    // Create ai_evaluation_results table to store evaluation scores
+    // Create video_answers_with_gpt_reviews table to store evaluation scores
     await sql`
-      CREATE TABLE IF NOT EXISTS ai_evaluation_results (
+      CREATE TABLE IF NOT EXISTS video_answers_with_gpt_reviews (
         id SERIAL PRIMARY KEY,
         answer_id VARCHAR(255) NOT NULL UNIQUE,
         interview_id VARCHAR(255) NOT NULL,
@@ -53,7 +53,7 @@ async function createTables() {
         evaluation_openness INTEGER,
         evaluation_summary TEXT,
         evaluation_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        gpt_model VARCHAR(100) DEFAULT 'openai/gpt-4o-mini',
+        gpt_model VARCHAR(100) DEFAULT 'google/gemini-1.5-flash',
         evaluation_prompt_version VARCHAR(20) DEFAULT '1.0',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -62,18 +62,18 @@ async function createTables() {
 
     // Create indexes for better performance
     await sql`
-      CREATE INDEX IF NOT EXISTS idx_ai_evaluation_answer_id ON ai_evaluation_results(answer_id)
+      CREATE INDEX IF NOT EXISTS idx_video_answers_answer_id ON video_answers_with_gpt_reviews(answer_id)
     `;
     
     await sql`
-      CREATE INDEX IF NOT EXISTS idx_ai_evaluation_interview_id ON ai_evaluation_results(interview_id)
+      CREATE INDEX IF NOT EXISTS idx_video_answers_interview_id ON video_answers_with_gpt_reviews(interview_id)
     `;
     
     await sql`
-      CREATE INDEX IF NOT EXISTS idx_ai_evaluation_question_id ON ai_evaluation_results(question_id)
+      CREATE INDEX IF NOT EXISTS idx_video_answers_question_id ON video_answers_with_gpt_reviews(question_id)
     `;
 
-    console.log('✅ Database tables created/verified (ai_evaluation_results)');
+    console.log('✅ Database tables created/verified (video_answers_with_gpt_reviews)');
   } catch (error) {
     console.error('❌ Error creating tables:', error);
     throw error;
@@ -101,7 +101,7 @@ class InterviewDataModel {
           eval.gpt_model,
           eval.evaluation_prompt_version
         FROM interview_answers_datamart dm
-        LEFT JOIN ai_evaluation_results eval ON dm.answer_id = eval.answer_id
+        LEFT JOIN video_answers_with_gpt_reviews eval ON dm.answer_id = eval.answer_id
         WHERE dm.interview_id = ${interviewId}
         ORDER BY dm.question_order
       `;
@@ -141,7 +141,7 @@ class InterviewDataModel {
           eval.gpt_model,
           eval.evaluation_prompt_version
         FROM interview_answers_datamart dm
-        LEFT JOIN ai_evaluation_results eval ON dm.answer_id = eval.answer_id
+        LEFT JOIN video_answers_with_gpt_reviews eval ON dm.answer_id = eval.answer_id
         WHERE dm.interview_id = ${interviewId} AND dm.question_id = ${questionId}
       `;
       return rows[0] || null;
@@ -159,14 +159,14 @@ class InterviewDataModel {
         query = sql`
           SELECT dm.*
           FROM interview_answers_datamart dm
-          LEFT JOIN ai_evaluation_results eval ON dm.answer_id = eval.answer_id
+          LEFT JOIN video_answers_with_gpt_reviews eval ON dm.answer_id = eval.answer_id
           WHERE eval.answer_id IS NULL AND dm.position_id = ${positionId}
         `;
       } else {
         query = sql`
           SELECT dm.*
           FROM interview_answers_datamart dm
-          LEFT JOIN ai_evaluation_results eval ON dm.answer_id = eval.answer_id
+          LEFT JOIN video_answers_with_gpt_reviews eval ON dm.answer_id = eval.answer_id
           WHERE eval.answer_id IS NULL
         `;
       }
@@ -179,10 +179,10 @@ class InterviewDataModel {
   }
 
   // Save evaluation results to separate table
-  async updateEvaluationResults(answerId, interviewId, questionId, evaluation, gptModel = 'openai/gpt-4o-mini') {
+  async updateEvaluationResults(answerId, interviewId, questionId, evaluation, gptModel = 'google/gemini-1.5-flash') {
     try {
       await sql`
-        INSERT INTO ai_evaluation_results (
+        INSERT INTO video_answers_with_gpt_reviews (
           answer_id, interview_id, question_id,
           evaluation_addressing, evaluation_be_specific, evaluation_openness,
           evaluation_summary, gpt_model, evaluation_prompt_version,
@@ -217,12 +217,12 @@ class InterviewDataModel {
       let query;
       if (interviewId) {
         query = sql`
-          DELETE FROM ai_evaluation_results 
+          DELETE FROM video_answers_with_gpt_reviews 
           WHERE interview_id = ${interviewId}
         `;
       } else if (positionId) {
         query = sql`
-          DELETE FROM ai_evaluation_results 
+          DELETE FROM video_answers_with_gpt_reviews 
           WHERE answer_id IN (
             SELECT answer_id FROM interview_answers_datamart 
             WHERE position_id = ${positionId}
@@ -253,7 +253,7 @@ class InterviewDataModel {
             COUNT(DISTINCT eval.gpt_model) as models_used,
             COUNT(DISTINCT eval.evaluation_prompt_version) as prompt_versions_used
           FROM interview_answers_datamart dm
-          LEFT JOIN ai_evaluation_results eval ON dm.answer_id = eval.answer_id
+          LEFT JOIN video_answers_with_gpt_reviews eval ON dm.answer_id = eval.answer_id
           WHERE dm.position_id = ${positionId}
         `;
       } else {
@@ -265,7 +265,7 @@ class InterviewDataModel {
             COUNT(DISTINCT eval.gpt_model) as models_used,
             COUNT(DISTINCT eval.evaluation_prompt_version) as prompt_versions_used
           FROM interview_answers_datamart dm
-          LEFT JOIN ai_evaluation_results eval ON dm.answer_id = eval.answer_id
+          LEFT JOIN video_answers_with_gpt_reviews eval ON dm.answer_id = eval.answer_id
         `;
       }
       

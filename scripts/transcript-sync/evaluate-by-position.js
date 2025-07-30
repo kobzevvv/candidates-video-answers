@@ -15,7 +15,7 @@ async function delay(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-async function evaluateAnswer(candidateId, interviewId, question, answer, gptModel = 'openai/gpt-4o-mini') {
+async function evaluateAnswer(candidateId, interviewId, question, answer, gptModel = 'google/gemini-1.5-flash') {
   try {
     console.log(`🌐 Calling Cloud Function: ${CLOUD_FUNCTION_URL}`);
     const response = await axios.post(CLOUD_FUNCTION_URL, {
@@ -61,7 +61,7 @@ async function saveEvaluationResult(result, outputDir) {
 }
 
 async function main() {
-  const [positionId, skipEvaluated, gptModel = 'openai/gpt-4o-mini'] = process.argv.slice(2);
+  const [positionId, skipEvaluated, gptModel = 'google/gemini-1.5-flash'] = process.argv.slice(2);
   
   if (!positionId) {
     console.error('Usage: node evaluate-by-position.js <position_id> [skip_evaluated] [gpt_model]');

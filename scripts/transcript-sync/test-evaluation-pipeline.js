@@ -83,7 +83,7 @@ async function testEvaluationPipeline() {
       interview_id: sampleAnswer.interview_id,
       question: sampleAnswer.question_text,
       answer: sampleAnswer.transcription_text,
-      gpt_model: 'openai/gpt-4o-mini'
+      gpt_model: 'google/gemini-1.5-flash'
     }, {
       headers: {
         'Content-Type': 'application/json',
@@ -124,7 +124,7 @@ async function testEvaluationPipeline() {
     
     // Verify storage
     const stored = await dataModel.sql`
-      SELECT * FROM ai_evaluation_results 
+      SELECT * FROM video_answers_with_gpt_reviews 
       WHERE answer_id = ${sampleAnswer.answer_id}
     `;
     
@@ -143,10 +143,10 @@ async function testEvaluationPipeline() {
     const unevaluated = await dataModel.sql`
       SELECT COUNT(*) as count
       FROM interview_answers ia
-      LEFT JOIN ai_evaluation_results aer ON ia.id = aer.answer_id
+      LEFT JOIN video_answers_with_gpt_reviews vgr ON ia.id = vgr.answer_id
       WHERE ia.transcription_text IS NOT NULL
         AND LENGTH(ia.transcription_text) > 50
-        AND aer.answer_id IS NULL
+        AND vgr.answer_id IS NULL
     `;
     
     console.log(`📊 Unevaluated video answers: ${unevaluated[0].count}`);

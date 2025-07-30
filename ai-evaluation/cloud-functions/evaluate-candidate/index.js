@@ -74,7 +74,7 @@ functions.http('evaluateCandidate', async (req, res) => {
     const interviewId = req.query.interview_id || req.body?.interview_id;
     const question = req.query.question || req.body?.question;
     const answer = req.query.answer || req.body?.answer;
-    const gptModel = req.query.gpt_model || req.body?.gpt_model || 'openai/gpt-4o-mini';
+    const gptModel = req.query.gpt_model || req.body?.gpt_model || 'google/gemini-1.5-flash';
     
     console.log(`[${new Date().toISOString()}] Request params - Model: ${gptModel}, Candidate: ${candidateId}, Interview: ${interviewId}`);
 
