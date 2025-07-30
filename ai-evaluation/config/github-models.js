@@ -1,123 +1,102 @@
 // GitHub Models API - Available Models Configuration
 // Updated: 2025-07-30
 // Source: GitHub Models API documentation
+// NOTE: As of July 2025, GitHub Models API only supports OpenAI models
 
 const GITHUB_MODELS = {
-  // OpenAI Models
-  'gpt-4o': {
-    id: 'gpt-4o',
-    name: 'GPT-4o',
-    provider: 'OpenAI',
-    description: 'Most capable GPT-4 model for complex tasks',
-    contextWindow: 128000,
-    recommended: true
-  },
+  // Currently Working Models (OpenAI only)
   'gpt-4o-mini': {
     id: 'gpt-4o-mini',
     name: 'GPT-4o Mini',
     provider: 'OpenAI',
-    description: 'Smaller, faster, and cheaper GPT-4 variant',
+    description: 'Fast and cost-effective',
     contextWindow: 128000,
-    recommended: true
+    recommended: true,
+    default: true,
+    working: true
+  },
+  'gpt-4o': {
+    id: 'gpt-4o',
+    name: 'GPT-4o',
+    provider: 'OpenAI',
+    description: 'Most capable for complex tasks',
+    contextWindow: 128000,
+    recommended: true,
+    working: true
+  },
+  'openai/gpt-4o-mini': {
+    id: 'openai/gpt-4o-mini',
+    name: 'GPT-4o Mini (with prefix)',
+    provider: 'OpenAI',
+    description: 'Same as gpt-4o-mini',
+    contextWindow: 128000,
+    recommended: false,
+    working: true
+  },
+  'openai/gpt-4o': {
+    id: 'openai/gpt-4o',
+    name: 'GPT-4o (with prefix)',
+    provider: 'OpenAI',
+    description: 'Same as gpt-4o',
+    contextWindow: 128000,
+    recommended: false,
+    working: true
   },
 
-  // Google Models
-  'google/gemini-1.5-pro': {
-    id: 'google/gemini-1.5-pro',
-    name: 'Gemini 1.5 Pro',
-    provider: 'Google',
-    description: 'Advanced model with large context window',
-    contextWindow: 1000000,
-    recommended: true
-  },
+  // Future Models (Not yet available on GitHub Models API)
   'google/gemini-1.5-flash': {
     id: 'google/gemini-1.5-flash',
     name: 'Gemini 1.5 Flash',
     provider: 'Google',
-    description: 'Fast and efficient for most tasks',
+    description: 'Fast and efficient (coming soon)',
     contextWindow: 1000000,
-    recommended: true,
-    default: true
+    recommended: false,
+    working: false
   },
-
-  // Anthropic Models
+  'google/gemini-1.5-pro': {
+    id: 'google/gemini-1.5-pro',
+    name: 'Gemini 1.5 Pro',
+    provider: 'Google',
+    description: 'Advanced model (coming soon)',
+    contextWindow: 1000000,
+    recommended: false,
+    working: false
+  },
   'claude-3-5-sonnet-latest': {
     id: 'claude-3-5-sonnet-latest',
     name: 'Claude 3.5 Sonnet',
     provider: 'Anthropic',
-    description: 'Latest Claude model, excellent for analysis',
+    description: 'Excellent for analysis (coming soon)',
     contextWindow: 200000,
-    recommended: true
-  },
-  'claude-3-haiku': {
-    id: 'claude-3-haiku',
-    name: 'Claude 3 Haiku',
-    provider: 'Anthropic',
-    description: 'Fast and cost-effective Claude model',
-    contextWindow: 200000,
-    recommended: false
-  },
-
-  // Meta Models
-  'meta-llama/llama-3.1-405b-instruct': {
-    id: 'meta-llama/llama-3.1-405b-instruct',
-    name: 'Llama 3.1 405B',
-    provider: 'Meta',
-    description: 'Largest open-source model',
-    contextWindow: 128000,
-    recommended: true
+    recommended: false,
+    working: false
   },
   'meta-llama/llama-3.1-70b-instruct': {
     id: 'meta-llama/llama-3.1-70b-instruct',
     name: 'Llama 3.1 70B',
     provider: 'Meta',
-    description: 'Powerful open-source model',
+    description: 'Open-source model (coming soon)',
     contextWindow: 128000,
-    recommended: true
+    recommended: false,
+    working: false
   },
-  'meta-llama/llama-3.1-8b-instruct': {
-    id: 'meta-llama/llama-3.1-8b-instruct',
-    name: 'Llama 3.1 8B',
-    provider: 'Meta',
-    description: 'Lightweight open-source model',
-    contextWindow: 128000,
-    recommended: false
-  },
-
-  // Mistral Models
   'mistral/mistral-large-2407': {
     id: 'mistral/mistral-large-2407',
     name: 'Mistral Large',
     provider: 'Mistral AI',
-    description: 'Flagship Mistral model',
+    description: 'European model (coming soon)',
     contextWindow: 128000,
-    recommended: true
+    recommended: false,
+    working: false
   },
-  'mistral/mistral-small-2409': {
-    id: 'mistral/mistral-small-2409',
-    name: 'Mistral Small',
-    provider: 'Mistral AI',
-    description: 'Efficient Mistral model',
-    contextWindow: 128000,
-    recommended: false
-  },
-
-  // Cohere Models
   'cohere/command-r-plus': {
     id: 'cohere/command-r-plus',
     name: 'Command R+',
     provider: 'Cohere',
-    description: 'Advanced RAG and tool use',
+    description: 'Advanced RAG (coming soon)',
     contextWindow: 128000,
-    recommended: true
-  },
-  'cohere/command-r': {
-    id: 'cohere/command-r',
-    name: 'Command R',
-    provider: 'Cohere',
-    description: 'Efficient for RAG and tool use',
-    contextWindow: 128000,
-    recommended: false
+    recommended: false,
+    working: false
   }
 };
 
@@ -127,8 +106,11 @@ const MODEL_IDS = Object.keys(GITHUB_MODELS);
 // Get recommended models only
 const RECOMMENDED_MODELS = MODEL_IDS.filter(id => GITHUB_MODELS[id].recommended);
 
+// Get working models only
+const WORKING_MODELS = MODEL_IDS.filter(id => GITHUB_MODELS[id].working);
+
 // Get default model
-const DEFAULT_MODEL = MODEL_IDS.find(id => GITHUB_MODELS[id].default) || 'google/gemini-1.5-flash';
+const DEFAULT_MODEL = MODEL_IDS.find(id => GITHUB_MODELS[id].default) || 'gpt-4o-mini';
 
 // Helper function to validate model
 function isValidModel(modelId) {
@@ -145,6 +127,7 @@ module.exports = {
   GITHUB_MODELS,
   MODEL_IDS,
   RECOMMENDED_MODELS,
+  WORKING_MODELS,
   DEFAULT_MODEL,
   isValidModel,
   getModelInfo
