@@ -73,41 +73,54 @@ async function main() {
     let errorCount = 0;
 
     for (const interview of interviews) {
-      const { interview_id: interviewId, candidate_id: candidateId } = interview;
+      const { interview_id: interviewId, candidate_email, candidate_first_name, candidate_last_name } = interview;
       
-      console.log(`🔍 Processing interview: ${interviewId} for candidate: ${candidateId}`);
+      console.log(`🔍 Processing interview: ${interviewId} for candidate: ${candidate_first_name} ${candidate_last_name} (${candidate_email})`);
       
       // Get all question-answer pairs for this interview
       const questionAnswers = await dataModel.getInterviewAnswers(interviewId);
       
       for (const qa of questionAnswers) {
-        const { question_id, question_text, answer_text, evaluation_addressing } = qa;
+        const { 
+          answer_id, 
+          question_id, 
+          question_title, 
+          question_description,
+          transcription_text, 
+          evaluation_addressing 
+        } = qa;
         
         // Skip if already evaluated (unless skip_evaluated is false)
         if (skipEvaluated === 'true' && evaluation_addressing !== null) {
-          console.log(`⏭️  Skipping already evaluated Q&A: ${question_id}`);
+          console.log(`⏭️  Skipping already evaluated answer: ${answer_id}`);
           skippedCount++;
           continue;
         }
 
-        if (!question_text || !answer_text) {
-          console.log(`⚠️  Skipping incomplete Q&A: ${question_id}`);
+        if (!transcription_text || !question_title) {
+          console.log(`⚠️  Skipping incomplete Q&A: answer_id ${answer_id}`);
           continue;
         }
 
+        // Use question_title as the main question, with description as context if available
+        const questionText = question_description ? `${question_title}: ${question_description}` : question_title;
+
+        console.log(`🔍 Evaluating answer ${answer_id} for question: "${question_title}"`);
+
         // Evaluate the answer
-        const evaluation = await evaluateAnswer(candidateId, interviewId, question_text, answer_text, gptModel);
+        const evaluation = await evaluateAnswer(candidate_email, interviewId, questionText, transcription_text, gptModel);
         if (evaluation && evaluation.evaluation) {
-          // Save to datamart
-          await dataModel.updateEvaluationResults(interviewId, question_id, evaluation.evaluation, evaluation.model_used);
+          // Save to datamart using answer_id
+          await dataModel.updateEvaluationResults(answer_id, interviewId, question_id, evaluation.evaluation, evaluation.model_used);
           
           // Also save to file for backup
           await saveEvaluationResult({
             ...evaluation,
             position_id: positionId,
+            answer_id: answer_id,
             question_id: question_id,
-            question: question_text,
-            answer: answer_text
+            question: questionText,
+            answer: transcription_text
           }, outputDir);
           
           processedCount++;

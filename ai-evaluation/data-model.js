@@ -21,24 +21,21 @@ if (process.env.DATABASE_URL) {
   sql = neon(process.env.DATABASE_URL);
 }
 
-// Create tables if they don't exist
+// Create evaluation results table (separate from the existing view)
 async function createTables() {
   try {
-    // Create interview_answers_datamart table
+    // Create ai_evaluation_results table to store evaluation scores
     await sql`
-      CREATE TABLE IF NOT EXISTS interview_answers_datamart (
+      CREATE TABLE IF NOT EXISTS ai_evaluation_results (
         id SERIAL PRIMARY KEY,
+        answer_id INTEGER NOT NULL UNIQUE,
         interview_id VARCHAR(255) NOT NULL,
-        candidate_id VARCHAR(255) NOT NULL,
-        position_id VARCHAR(255) NOT NULL,
-        question_id VARCHAR(255) NOT NULL,
-        question_text TEXT NOT NULL,
-        answer_text TEXT NOT NULL,
+        question_id INTEGER NOT NULL,
         evaluation_addressing INTEGER,
         evaluation_be_specific INTEGER,
         evaluation_openness INTEGER,
         evaluation_summary TEXT,
-        evaluation_timestamp TIMESTAMP,
+        evaluation_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         gpt_model VARCHAR(100) DEFAULT 'gpt-3.5-turbo',
         evaluation_prompt_version VARCHAR(20) DEFAULT '1.0',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -48,22 +45,18 @@ async function createTables() {
 
     // Create indexes for better performance
     await sql`
-      CREATE INDEX IF NOT EXISTS idx_interview_answers_interview_id ON interview_answers_datamart(interview_id)
+      CREATE INDEX IF NOT EXISTS idx_ai_evaluation_answer_id ON ai_evaluation_results(answer_id)
     `;
     
     await sql`
-      CREATE INDEX IF NOT EXISTS idx_interview_answers_candidate_id ON interview_answers_datamart(candidate_id)
+      CREATE INDEX IF NOT EXISTS idx_ai_evaluation_interview_id ON ai_evaluation_results(interview_id)
     `;
     
     await sql`
-      CREATE INDEX IF NOT EXISTS idx_interview_answers_position_id ON interview_answers_datamart(position_id)
-    `;
-    
-    await sql`
-      CREATE INDEX IF NOT EXISTS idx_interview_answers_evaluation ON interview_answers_datamart(evaluation_addressing)
+      CREATE INDEX IF NOT EXISTS idx_ai_evaluation_question_id ON ai_evaluation_results(question_id)
     `;
 
-    console.log('✅ Database tables created/verified (interview_answers_datamart)');
+    console.log('✅ Database tables created/verified (ai_evaluation_results)');
   } catch (error) {
     console.error('❌ Error creating tables:', error);
     throw error;
@@ -77,13 +70,23 @@ class InterviewDataModel {
     }
   }
 
-  // Get all question-answer pairs for a specific interview
+  // Get all question-answer pairs for a specific interview with evaluation status
   async getInterviewAnswers(interviewId) {
     try {
       const rows = await sql`
-        SELECT * FROM interview_answers_datamart 
-        WHERE interview_id = ${interviewId}
-        ORDER BY question_id
+        SELECT 
+          dm.*,
+          eval.evaluation_addressing,
+          eval.evaluation_be_specific,
+          eval.evaluation_openness,
+          eval.evaluation_summary,
+          eval.evaluation_timestamp,
+          eval.gpt_model,
+          eval.evaluation_prompt_version
+        FROM interview_answers_datamart dm
+        LEFT JOIN ai_evaluation_results eval ON dm.answer_id = eval.answer_id
+        WHERE dm.interview_id = ${interviewId}
+        ORDER BY dm.question_order
       `;
       return rows;
     } catch (error) {
@@ -96,7 +99,7 @@ class InterviewDataModel {
   async getInterviewsByPosition(positionId) {
     try {
       const rows = await sql`
-        SELECT DISTINCT interview_id, candidate_id 
+        SELECT DISTINCT interview_id, candidate_email, candidate_first_name, candidate_last_name
         FROM interview_answers_datamart 
         WHERE position_id = ${positionId}
       `;
@@ -107,12 +110,22 @@ class InterviewDataModel {
     }
   }
 
-  // Get specific question-answer pair
+  // Get specific question-answer pair with evaluation
   async getQuestionAnswer(interviewId, questionId) {
     try {
       const rows = await sql`
-        SELECT * FROM interview_answers_datamart 
-        WHERE interview_id = ${interviewId} AND question_id = ${questionId}
+        SELECT 
+          dm.*,
+          eval.evaluation_addressing,
+          eval.evaluation_be_specific,
+          eval.evaluation_openness,
+          eval.evaluation_summary,
+          eval.evaluation_timestamp,
+          eval.gpt_model,
+          eval.evaluation_prompt_version
+        FROM interview_answers_datamart dm
+        LEFT JOIN ai_evaluation_results eval ON dm.answer_id = eval.answer_id
+        WHERE dm.interview_id = ${interviewId} AND dm.question_id = ${questionId}
       `;
       return rows[0] || null;
     } catch (error) {
@@ -127,13 +140,17 @@ class InterviewDataModel {
       let query;
       if (positionId) {
         query = sql`
-          SELECT * FROM interview_answers_datamart 
-          WHERE evaluation_addressing IS NULL AND position_id = ${positionId}
+          SELECT dm.*
+          FROM interview_answers_datamart dm
+          LEFT JOIN ai_evaluation_results eval ON dm.answer_id = eval.answer_id
+          WHERE eval.answer_id IS NULL AND dm.position_id = ${positionId}
         `;
       } else {
         query = sql`
-          SELECT * FROM interview_answers_datamart 
-          WHERE evaluation_addressing IS NULL
+          SELECT dm.*
+          FROM interview_answers_datamart dm
+          LEFT JOIN ai_evaluation_results eval ON dm.answer_id = eval.answer_id
+          WHERE eval.answer_id IS NULL
         `;
       }
       const rows = await query;
@@ -144,64 +161,62 @@ class InterviewDataModel {
     }
   }
 
-  // Update evaluation results back to the datamart
-  async updateEvaluationResults(interviewId, questionId, evaluation, gptModel = 'gpt-3.5-turbo') {
+  // Save evaluation results to separate table
+  async updateEvaluationResults(answerId, interviewId, questionId, evaluation, gptModel = 'gpt-3.5-turbo') {
     try {
       await sql`
-        UPDATE interview_answers_datamart 
-        SET evaluation_addressing = ${evaluation.addressing},
-            evaluation_be_specific = ${evaluation.be_specific},
-            evaluation_openness = ${evaluation.openness},
-            evaluation_summary = ${evaluation.short_summary},
-            evaluation_timestamp = NOW(),
-            gpt_model = ${gptModel},
-            evaluation_prompt_version = ${CURRENT_PROMPT_VERSION},
-            updated_at = NOW()
-        WHERE interview_id = ${interviewId} AND question_id = ${questionId}
+        INSERT INTO ai_evaluation_results (
+          answer_id, interview_id, question_id,
+          evaluation_addressing, evaluation_be_specific, evaluation_openness,
+          evaluation_summary, gpt_model, evaluation_prompt_version,
+          evaluation_timestamp, updated_at
+        ) VALUES (
+          ${answerId}, ${interviewId}, ${questionId},
+          ${evaluation.addressing}, ${evaluation.be_specific}, ${evaluation.openness},
+          ${evaluation.short_summary}, ${gptModel}, ${CURRENT_PROMPT_VERSION},
+          NOW(), NOW()
+        )
+        ON CONFLICT (answer_id) 
+        DO UPDATE SET 
+          evaluation_addressing = EXCLUDED.evaluation_addressing,
+          evaluation_be_specific = EXCLUDED.evaluation_be_specific,
+          evaluation_openness = EXCLUDED.evaluation_openness,
+          evaluation_summary = EXCLUDED.evaluation_summary,
+          gpt_model = EXCLUDED.gpt_model,
+          evaluation_prompt_version = EXCLUDED.evaluation_prompt_version,
+          evaluation_timestamp = NOW(),
+          updated_at = NOW()
       `;
-      console.log(`✅ Updated evaluation for interview ${interviewId}, question ${questionId}`);
+      console.log(`✅ Updated evaluation for answer ${answerId} (interview ${interviewId}, question ${questionId})`);
     } catch (error) {
       console.error('❌ Error updating evaluation results:', error);
       throw error;
     }
   }
 
-  // Clear all evaluations for re-processing (when prompt changes or model changes)
+  // Clear all evaluations for re-processing
   async clearEvaluations(positionId = null, interviewId = null) {
     try {
       let query;
       if (interviewId) {
         query = sql`
-          UPDATE interview_answers_datamart 
-          SET evaluation_addressing = NULL,
-              evaluation_be_specific = NULL,
-              evaluation_openness = NULL,
-              evaluation_summary = NULL,
-              evaluation_timestamp = NULL,
-              gpt_model = NULL,
-              evaluation_prompt_version = NULL,
-              updated_at = NOW()
+          DELETE FROM ai_evaluation_results 
           WHERE interview_id = ${interviewId}
         `;
       } else if (positionId) {
         query = sql`
-          UPDATE interview_answers_datamart 
-          SET evaluation_addressing = NULL,
-              evaluation_be_specific = NULL,
-              evaluation_openness = NULL,
-              evaluation_summary = NULL,
-              evaluation_timestamp = NULL,
-              gpt_model = NULL,
-              evaluation_prompt_version = NULL,
-              updated_at = NOW()
-          WHERE position_id = ${positionId}
+          DELETE FROM ai_evaluation_results 
+          WHERE answer_id IN (
+            SELECT answer_id FROM interview_answers_datamart 
+            WHERE position_id = ${positionId}
+          )
         `;
       } else {
         throw new Error('Either positionId or interviewId must be provided');
       }
       
-      await query;
-      console.log('✅ Cleared evaluations for re-processing');
+      const result = await query;
+      console.log(`✅ Cleared ${result.length || 0} evaluations for re-processing`);
     } catch (error) {
       console.error('❌ Error clearing evaluations:', error);
       throw error;
@@ -215,23 +230,25 @@ class InterviewDataModel {
       if (positionId) {
         query = sql`
           SELECT 
-            COUNT(*) as total_answers,
-            COUNT(evaluation_addressing) as evaluated_answers,
-            COUNT(CASE WHEN evaluation_addressing IS NULL THEN 1 END) as pending_answers,
-            COUNT(DISTINCT gpt_model) as models_used,
-            COUNT(DISTINCT evaluation_prompt_version) as prompt_versions_used
-          FROM interview_answers_datamart 
-          WHERE position_id = ${positionId}
+            COUNT(dm.answer_id) as total_answers,
+            COUNT(eval.answer_id) as evaluated_answers,
+            COUNT(dm.answer_id) - COUNT(eval.answer_id) as pending_answers,
+            COUNT(DISTINCT eval.gpt_model) as models_used,
+            COUNT(DISTINCT eval.evaluation_prompt_version) as prompt_versions_used
+          FROM interview_answers_datamart dm
+          LEFT JOIN ai_evaluation_results eval ON dm.answer_id = eval.answer_id
+          WHERE dm.position_id = ${positionId}
         `;
       } else {
         query = sql`
           SELECT 
-            COUNT(*) as total_answers,
-            COUNT(evaluation_addressing) as evaluated_answers,
-            COUNT(CASE WHEN evaluation_addressing IS NULL THEN 1 END) as pending_answers,
-            COUNT(DISTINCT gpt_model) as models_used,
-            COUNT(DISTINCT evaluation_prompt_version) as prompt_versions_used
-          FROM interview_answers_datamart
+            COUNT(dm.answer_id) as total_answers,
+            COUNT(eval.answer_id) as evaluated_answers,
+            COUNT(dm.answer_id) - COUNT(eval.answer_id) as pending_answers,
+            COUNT(DISTINCT eval.gpt_model) as models_used,
+            COUNT(DISTINCT eval.evaluation_prompt_version) as prompt_versions_used
+          FROM interview_answers_datamart dm
+          LEFT JOIN ai_evaluation_results eval ON dm.answer_id = eval.answer_id
         `;
       }
       
