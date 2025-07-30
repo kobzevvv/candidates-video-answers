@@ -29,7 +29,7 @@ curl -X POST "${CLOUD_FUNCTION_URL}" \
   -s | jq '.' || echo "Failed"
 
 echo ""
-echo "3️⃣ Testing with microsoft/phi-3.5 model..."
+echo "3️⃣ Testing with gpt-4o model..."
 curl -X POST "${CLOUD_FUNCTION_URL}" \
   -H "Content-Type: application/json" \
   -d '{
@@ -37,6 +37,19 @@ curl -X POST "${CLOUD_FUNCTION_URL}" \
     "interview_id": "test-interview",
     "question": "Tell me about yourself", 
     "answer": "I am a software engineer with 5 years of experience",
-    "gpt_model": "microsoft/phi-3.5"
+    "gpt_model": "gpt-4o"
+  }' \
+  -s | jq '.' || echo "Failed"
+
+echo ""
+echo "4️⃣ Testing with claude-3-5-sonnet-latest model..."
+curl -X POST "${CLOUD_FUNCTION_URL}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "candidate_id": "test-candidate",
+    "interview_id": "test-interview",
+    "question": "Tell me about yourself", 
+    "answer": "I am a software engineer with 5 years of experience",
+    "gpt_model": "claude-3-5-sonnet-latest"
   }' \
   -s | jq '.' || echo "Failed"

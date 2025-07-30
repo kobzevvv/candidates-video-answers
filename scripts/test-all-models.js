@@ -1,18 +1,20 @@
 #!/usr/bin/env node
 
 const axios = require('axios');
+const { RECOMMENDED_MODELS, GITHUB_MODELS } = require('../ai-evaluation/config/github-models');
 
 const CLOUD_FUNCTION_URL = process.env.CLOUD_FUNCTION_URL || 'https://evaluate-candidate-grz2olvbca-uc.a.run.app';
 
-const models = [
-  'google/gemini-1.5-flash',
-  'google/gemini-2.0-flash',
-  'openai/gpt-4o-mini',
-  'meta/llama-3.1-8b',
-  'microsoft/phi-3.5',
-  'openai/gpt-4o',
-  'openai/gpt-4.1'
-];
+// Use recommended models for testing
+const models = RECOMMENDED_MODELS;
+
+console.log('📋 Available GitHub Models:');
+console.log('─'.repeat(80));
+models.forEach(modelId => {
+  const model = GITHUB_MODELS[modelId];
+  console.log(`• ${modelId.padEnd(35)} - ${model.provider} - ${model.description}`);
+});
+console.log('─'.repeat(80));
 
 async function testModel(model) {
   const testData = {

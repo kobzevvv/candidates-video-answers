@@ -66,18 +66,21 @@ node evaluate-by-interview.js "688734e38fb4bc64261bffe0" "openai/gpt-4o-mini"
 
 ## Model Compatibility
 
-### Working Models ✅
-- `openai/gpt-4o-mini` - **Recommended** (good balance of cost and performance)
-- `openai/gpt-4o` - Higher quality, more expensive
-- `openai/gpt-4.1` - Highest quality, fastest response
+### Valid GitHub Models ✅
+See [GITHUB_MODELS.md](./GITHUB_MODELS.md) for the complete list of available models.
 
-### Non-Working Models ❌
-- `google/gemini-1.5-flash` - Returns 500 error
-- `google/gemini-2.0-flash` - Returns 500 error
-- `meta/llama-3.1-8b` - Returns 500 error
-- `microsoft/phi-3.5` - Returns 500 error
+**Recommended Models:**
+- `google/gemini-1.5-flash` - **Default** (fast and efficient)
+- `gpt-4o` - High quality for complex tasks
+- `claude-3-5-sonnet-latest` - Excellent for detailed analysis
+- `meta-llama/llama-3.1-70b-instruct` - Open source option
 
-**Note**: The non-working models may not be available through GitHub Models API or may require different API parameters.
+### Invalid Models ❌
+- `microsoft/phi-3.5` - Not available on GitHub Models API
+- `google/gemini-2.0-flash` - Not yet available
+- `openai/gpt-4.1` - Invalid model ID
+
+**Note**: Always use model IDs from the official GitHub Models catalog.
 
 ### Testing Models
 ```bash
