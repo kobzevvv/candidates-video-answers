@@ -1,0 +1,118 @@
+name: Test Evaluation After Deploy
+
+on:
+  workflow_run:
+    workflows: ["Deploy Cloud Function"]
+    types:
+      - completed
+    branches:
+      - main
+
+jobs:
+  test-evaluation:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        
+    - name: Install dependencies
+      run: |
+        cd ai-evaluation
+        npm install
+        cd ../scripts/transcript-sync
+        npm install
+        
+    - name: Wait for function to be ready
+      run: |
+        echo "⏳ Waiting 30 seconds for Cloud Function to be fully ready..."
+        sleep 30
+        
+    - name: Test Cloud Function connectivity
+      env:
+        CLOUD_FUNCTION_URL: ${{ secrets.CLOUD_FUNCTION_URL }}
+      run: |
+        echo "🧪 Testing Cloud Function connectivity..."
+        cd ai-evaluation
+        node test-cloud-function.js || echo "⚠️ Connectivity test failed"
+        
+    - name: Run test evaluation
+      id: test-eval
+      env:
+        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        CLOUD_FUNCTION_URL: ${{ secrets.CLOUD_FUNCTION_URL }}
+        DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      run: |
+        echo "🚀 Running test evaluation on sample interview..."
+        cd scripts/transcript-sync
+        
+        # Use a known test interview ID or the most recent one
+        TEST_INTERVIEW_ID="688734e38fb4bc64261bffe0"
+        
+        echo "📋 Testing with interview: $TEST_INTERVIEW_ID"
+        
+        # Run evaluation and capture output
+        if node evaluate-by-interview.js "$TEST_INTERVIEW_ID" "gpt-3.5-turbo" 2>&1 | tee test-output.log; then
+          echo "✅ Test evaluation completed successfully"
+          echo "test_status=success" >> $GITHUB_OUTPUT
+        else
+          echo "❌ Test evaluation failed"
+          echo "test_status=failed" >> $GITHUB_OUTPUT
+          exit 1
+        fi
+        
+    - name: Extract test results
+      if: always()
+      run: |
+        cd scripts/transcript-sync
+        echo "## 🧪 Evaluation Test Results" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Deployment Trigger:** ${{ github.event.workflow_run.name }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Test Status:** ${{ steps.test-eval.outputs.test_status }}" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        if [ -f test-output.log ]; then
+          echo "### Summary" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          grep -E "✅|⏭️|❌|📊|🏁|⏳" test-output.log | tail -10 >> $GITHUB_STEP_SUMMARY || echo "No summary found" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+        fi
+        
+    - name: Upload test results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-evaluation-results-${{ github.run_number }}
+        path: |
+          scripts/transcript-sync/test-output.log
+          scripts/transcript-sync/evaluation-results/
+        retention-days: 7
+        
+    - name: Comment on deployment workflow
+      if: failure()
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const runId = context.payload.workflow_run.id;
+          const conclusion = '${{ steps.test-eval.outputs.test_status }}';
+          
+          // Add a comment to the deployment run
+          await github.rest.actions.createWorkflowDispatch({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            workflow_id: 'evaluate-candidates-with-comment.yml',
+            ref: 'main',
+            inputs: {
+              interview_id: '688734e38fb4bc64261bffe0',
+              gpt_model: 'gpt-3.5-turbo',
+              comment_issue_number: ''
+            }
+          }).catch(() => {
+            console.log('Could not trigger follow-up evaluation');
+          });
