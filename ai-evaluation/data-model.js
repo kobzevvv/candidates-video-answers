@@ -53,7 +53,7 @@ async function createTables() {
         evaluation_openness INTEGER,
         evaluation_summary TEXT,
         evaluation_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        gpt_model VARCHAR(100) DEFAULT 'gpt-3.5-turbo',
+        gpt_model VARCHAR(100) DEFAULT 'openai/gpt-4o-mini',
         evaluation_prompt_version VARCHAR(20) DEFAULT '1.0',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -179,7 +179,7 @@ class InterviewDataModel {
   }
 
   // Save evaluation results to separate table
-  async updateEvaluationResults(answerId, interviewId, questionId, evaluation, gptModel = 'gpt-3.5-turbo') {
+  async updateEvaluationResults(answerId, interviewId, questionId, evaluation, gptModel = 'openai/gpt-4o-mini') {
     try {
       await sql`
         INSERT INTO ai_evaluation_results (
