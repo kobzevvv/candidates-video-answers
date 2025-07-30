@@ -1,5 +1,11 @@
 name: Deploy Cloud Function
 on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'video-answers/candidate-use-case/**'
+      - '.github/workflows/deploy.yml'
   workflow_dispatch:
     inputs:
       function_name:
@@ -18,12 +24,31 @@ jobs:
       - uses: google-github-actions/setup-gcloud@v1
         with:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
+      - name: Set function name
+        id: function
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "name=${{ github.event.inputs.function_name }}" >> $GITHUB_OUTPUT
+          else
+            echo "name=video-interview-invite" >> $GITHUB_OUTPUT
+          fi
+          
       - name: Deploy
         run: |
+          echo "🚀 Deploying Cloud Function: ${{ steps.function.outputs.name }}"
           cd video-answers/candidate-use-case
-          gcloud functions deploy ${{ github.event.inputs.function_name }} \
+          gcloud functions deploy ${{ steps.function.outputs.name }} \
             --entry-point=videoInterviewInvite \
             --runtime=nodejs20 \
             --trigger-http \
             --allow-unauthenticated \
             --set-env-vars HIREFLIX_API_KEY=${{ secrets.HIREFLIX_API_KEY }}
+          
+      - name: Deployment Summary
+        run: |
+          echo "## 🚀 Cloud Function Deployment" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Function Name:** ${{ steps.function.outputs.name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Trigger:** ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status:** ✅ Deployed" >> $GITHUB_STEP_SUMMARY
