@@ -23,8 +23,9 @@ The system will automatically:
 
 ## Manual Usage
 
-### GitHub Action (Recommended)
+### GitHub Actions
 
+#### 🔄 Sync Transcripts
 1. Go to **Actions** → "Auto Sync Hireflix Transcripts"
 2. Click **Run workflow**
 3. Choose options:
@@ -35,6 +36,16 @@ The system will automatically:
      - `dry-run` - Show what would be synced without saving
    - **Include Archived**: Check to include archived positions when auto-discovering
 4. Click **Run workflow**
+
+#### 📋 List Positions
+1. Go to **Actions** → "List Hireflix Positions"
+2. Click **Run workflow**
+3. Choose options:
+   - **Include Archived**: Show archived positions
+   - **Output Format**: `table`, `json`, or `csv`
+4. Click **Run workflow**
+
+This will show all your Hireflix positions with deduplication tracking!
 
 ### Local Development
 
@@ -63,6 +74,18 @@ node hireflix-sync.js POSITION_ID_1 POSITION_ID_2
 
 # Combine options
 node hireflix-sync.js --full --include-archived
+
+# List all positions (table format)
+node list-positions.js
+
+# List positions including archived ones
+INCLUDE_ARCHIVED=true node list-positions.js
+
+# Output as JSON
+OUTPUT_FORMAT=json node list-positions.js
+
+# Output as CSV
+OUTPUT_FORMAT=csv node list-positions.js
 ```
 
 ## How It Works
