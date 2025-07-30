@@ -61,7 +61,31 @@ node scripts/transcript-sync/test-cloud-function-direct.js
 
 # Full evaluation test
 cd scripts/transcript-sync
-node evaluate-by-interview.js "688734e38fb4bc64261bffe0" "google/gemini-1.5-flash"
+node evaluate-by-interview.js "688734e38fb4bc64261bffe0" "openai/gpt-4o-mini"
+```
+
+## Model Compatibility
+
+### Working Models ✅
+- `openai/gpt-4o-mini` - **Recommended** (good balance of cost and performance)
+- `openai/gpt-4o` - Higher quality, more expensive
+- `openai/gpt-4.1` - Highest quality, fastest response
+
+### Non-Working Models ❌
+- `google/gemini-1.5-flash` - Returns 500 error
+- `google/gemini-2.0-flash` - Returns 500 error
+- `meta/llama-3.1-8b` - Returns 500 error
+- `microsoft/phi-3.5` - Returns 500 error
+
+**Note**: The non-working models may not be available through GitHub Models API or may require different API parameters.
+
+### Testing Models
+```bash
+# Test all available models
+node scripts/test-all-models.js
+
+# Debug specific model errors
+node scripts/debug-model-error.js
 ```
 
 ## Prevention
@@ -70,10 +94,11 @@ node evaluate-by-interview.js "688734e38fb4bc64261bffe0" "google/gemini-1.5-flas
 2. **Health Checks**: Use the `/health` endpoint to verify function configuration
 3. **Permissions**: Ensure GitHub Actions workflows have appropriate permissions defined
 4. **Monitoring**: Set up alerts for Cloud Function errors in Google Cloud Console
+5. **Model Selection**: Use only verified working models in production
 
 ## Required Secrets
 
 Make sure these secrets are set in your GitHub repository:
 - `PAT_GIT_HUB`: GitHub Personal Access Token with `repo` scope
-- `CLOUD_FUNCTION_URL`: The deployed Cloud Function URL
+- `CLOUD_FUNCTION_URL`: The deployed Cloud Function URL (e.g., https://evaluate-candidate-grz2olvbca-uc.a.run.app)
 - `DATABASE_URL`: Connection string for the database
