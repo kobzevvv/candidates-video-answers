@@ -1,4 +1,4 @@
-name: Deploy Cloud Function
+name: Deploy AI Evaluation Cloud Function
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
       - main
     paths:
       - 'ai-evaluation/cloud-functions/evaluate-candidate/**'
-      - '.github/workflows/deploy-cloud-function.yml'
+      - '.github/workflows/deploy-ai-evaluation-function.yml'
   workflow_dispatch:
     inputs:
       region:

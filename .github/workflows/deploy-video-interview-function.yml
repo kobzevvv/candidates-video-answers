@@ -1,11 +1,11 @@
-name: Deploy Cloud Function
+name: Deploy Video Interview Invite Function
 on:
   push:
     branches:
       - main
     paths:
       - 'video-answers/candidate-use-case/**'
-      - '.github/workflows/deploy.yml'
+      - '.github/workflows/deploy-video-interview-function.yml'
   workflow_dispatch:
     inputs:
       function_name:
