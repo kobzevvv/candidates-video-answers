@@ -183,6 +183,20 @@ async function main() {
     console.log(`⏳ Pending answers: ${stats.pending_answers}`);
     console.log(`📁 Results saved to: ${outputDir}`);
     
+    // Exit with error if no evaluations succeeded
+    if (processedCount === 0 && errorCount > 0) {
+      console.error('\n❌ FAILED: All evaluations failed');
+      process.exit(1);
+    }
+    
+    // Exit with error if more than 50% failed
+    const totalAttempts = processedCount + errorCount;
+    const errorRate = totalAttempts > 0 ? errorCount / totalAttempts : 0;
+    if (errorRate > 0.5) {
+      console.error(`\n❌ FAILED: Error rate too high (${(errorRate * 100).toFixed(1)}%)`);
+      process.exit(1);
+    }
+    
   } catch (error) {
     console.error('❌ Error during evaluation:', error);
     process.exit(1);

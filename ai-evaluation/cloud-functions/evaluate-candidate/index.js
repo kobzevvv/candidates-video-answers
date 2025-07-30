@@ -6,10 +6,16 @@ const { AzureKeyCredential } = require('@azure/core-auth');
 // Initialize GitHub Models client
 const token = process.env.GITHUB_TOKEN;
 const endpoint = 'https://models.github.ai/inference';
-const client = ModelClient(
+
+// Check if token exists before creating client
+if (!token) {
+  console.error('GITHUB_TOKEN environment variable is not set');
+}
+
+const client = token ? ModelClient(
   endpoint,
   new AzureKeyCredential(token)
-);
+) : null;
 
 // Load the evaluation prompt
 const EVALUATION_PROMPT = `
@@ -42,6 +48,14 @@ functions.http('evaluateCandidate', async (req, res) => {
   }
 
   try {
+    // Check if client is initialized
+    if (!client) {
+      return res.status(500).json({
+        error: 'Service configuration error',
+        message: 'GITHUB_TOKEN is not configured. Please set the environment variable.'
+      });
+    }
+    
     // Extract parameters from URL
     const candidateId = req.query.candidate_id || req.body?.candidate_id;
     const interviewId = req.query.interview_id || req.body?.interview_id;
