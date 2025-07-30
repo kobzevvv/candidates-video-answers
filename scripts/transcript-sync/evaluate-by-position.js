@@ -22,6 +22,8 @@ async function evaluateAnswer(candidateId, interviewId, question, answer, gptMod
       },
       timeout: 60000 // 60 second timeout
     });
+    console.log(`✅ Cloud Function response received`);
+    console.log(`📦 Response data:`, JSON.stringify(response.data, null, 2));
     return response.data;
   } catch (error) {
     console.error(`❌ Error evaluating answer for interview ${interviewId}:`);
@@ -135,7 +137,19 @@ async function main() {
 
         // Evaluate the answer
         const evaluation = await evaluateAnswer(candidate_email, interviewId, questionText, transcription_text, gptModel);
+        console.log(`📊 Evaluation result:`, evaluation ? 'Received response' : 'No response');
+        
+        if (evaluation) {
+          console.log(`📋 Response structure:`, {
+            hasEvaluation: !!evaluation.evaluation,
+            modelUsed: evaluation.model_used,
+            promptVersion: evaluation.prompt_version,
+            evaluationKeys: evaluation.evaluation ? Object.keys(evaluation.evaluation) : null
+          });
+        }
+        
         if (evaluation && evaluation.evaluation) {
+          console.log(`✅ Valid evaluation received for answer ${answer_id}`);
           // Save to datamart using answer_id
           await dataModel.updateEvaluationResults(answer_id, interviewId, question_id, evaluation.evaluation, evaluation.model_used);
           
@@ -151,6 +165,7 @@ async function main() {
           
           processedCount++;
         } else {
+          console.log(`❌ Invalid or missing evaluation for answer ${answer_id}`);
           errorCount++;
         }
       }
