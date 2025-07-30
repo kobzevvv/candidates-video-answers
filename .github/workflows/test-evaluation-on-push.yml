@@ -1,0 +1,115 @@
+name: Test Evaluation on Push
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - '**.md'
+      - '.gitignore'
+      - 'docs/**'
+
+jobs:
+  test-evaluation:
+    runs-on: ubuntu-latest
+    name: Test AI Evaluation System
+    
+    # Skip if commit message contains [skip ci]
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        
+    - name: Cache dependencies
+      uses: actions/cache@v3
+      with:
+        path: |
+          scripts/transcript-sync/node_modules
+          ai-evaluation/cloud-functions/evaluate-candidate/node_modules
+        key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-node-
+        
+    - name: Install dependencies
+      run: |
+        cd scripts/transcript-sync
+        npm install
+        
+    - name: Test evaluation with specific interview
+      env:
+        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        CLOUD_FUNCTION_URL: ${{ secrets.CLOUD_FUNCTION_URL }}
+        DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      run: |
+        cd scripts/transcript-sync
+        
+        echo "🧪 Running evaluation test on interview: 688734e38fb4bc64261bffe0"
+        echo "📊 Using GPT model: gpt-3.5-turbo"
+        echo "🎯 This is a CI/CD test run"
+        echo ""
+        
+        # Run evaluation for the test interview
+        node evaluate-by-interview.js "688734e38fb4bc64261bffe0" "gpt-3.5-turbo"
+        
+        # Check if evaluation was successful
+        if [ $? -eq 0 ]; then
+          echo "✅ Evaluation test passed!"
+        else
+          echo "❌ Evaluation test failed!"
+          exit 1
+        fi
+        
+    - name: Check evaluation results
+      run: |
+        cd scripts/transcript-sync
+        
+        # Check if evaluation results directory exists and has files
+        if [ -d "./evaluation-results" ] && [ "$(ls -A ./evaluation-results)" ]; then
+          echo "✅ Evaluation results found:"
+          ls -la ./evaluation-results/
+          
+          # Display the latest result
+          LATEST_FILE=$(ls -t ./evaluation-results/evaluation_*.json | head -n1)
+          if [ -n "$LATEST_FILE" ]; then
+            echo ""
+            echo "📄 Latest evaluation result:"
+            cat "$LATEST_FILE" | head -20
+          fi
+        else
+          echo "❌ No evaluation results found!"
+          exit 1
+        fi
+        
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-evaluation-results-${{ github.run_number }}
+        path: scripts/transcript-sync/evaluation-results/
+        retention-days: 7
+        
+    - name: Post status comment
+      uses: actions/github-script@v7
+      if: always() && github.event_name == 'push'
+      with:
+        script: |
+          const status = '${{ job.status }}' === 'success' ? '✅' : '❌';
+          const message = `${status} AI Evaluation test ${status === '✅' ? 'passed' : 'failed'} for interview 688734e38fb4bc64261bffe0`;
+          
+          console.log(`Test status: ${message}`);
+          
+          // Optionally create a commit status
+          await github.rest.repos.createCommitStatus({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            sha: context.sha,
+            state: '${{ job.status }}' === 'success' ? 'success' : 'failure',
+            description: message,
+            context: 'AI Evaluation Test'
+          });
