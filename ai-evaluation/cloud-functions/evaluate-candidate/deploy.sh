@@ -35,18 +35,19 @@ fi
 
 echo -e "${GREEN}📋 Current project: ${PROJECT_ID}${NC}"
 
-# Check for OpenAI API key
-if [ -z "$OPENAI_API_KEY" ]; then
-    echo -e "${YELLOW}⚠️  OPENAI_API_KEY environment variable is not set${NC}"
-    echo -n "Please enter your OpenAI API key: "
-    read -s OPENAI_API_KEY
+# Check for GitHub token
+if [ -z "$GITHUB_TOKEN" ]; then
+    echo -e "${YELLOW}⚠️  GITHUB_TOKEN environment variable is not set${NC}"
+    echo -n "Please enter your GitHub Personal Access Token: "
+    read -s GITHUB_TOKEN
     echo ""
 fi
 
-# Validate OpenAI API key format
-if [[ ! "$OPENAI_API_KEY" =~ ^sk-[a-zA-Z0-9]{48}$ ]]; then
-    echo -e "${YELLOW}⚠️  Warning: OpenAI API key format looks unusual${NC}"
-    echo "Expected format: sk-XXXXXXXX... (51 characters total)"
+# Validate GitHub token exists
+if [ -z "$GITHUB_TOKEN" ]; then
+    echo -e "${RED}❌ GitHub token is required${NC}"
+    echo "Create a PAT with 'repo' scope at: https://github.com/settings/tokens"
+    exit 1
 fi
 
 # Region selection
@@ -80,7 +81,7 @@ gcloud functions deploy evaluate-candidate \
     --region ${REGION} \
     --timeout 540s \
     --memory 512MB \
-    --set-env-vars OPENAI_API_KEY="${OPENAI_API_KEY}" \
+    --set-env-vars GITHUB_TOKEN="${GITHUB_TOKEN}" \
     --project ${PROJECT_ID}
 
 if [ $? -eq 0 ]; then
@@ -101,7 +102,7 @@ if [ $? -eq 0 ]; then
     echo "4. Value: ${FUNCTION_URL}"
     echo ""
     echo -e "${GREEN}🧪 Test the function:${NC}"
-    echo "curl '${FUNCTION_URL}?candidate_id=test&interview_id=test&question=Test&answer=Test&gpt_model=gpt-3.5-turbo'"
+    echo "curl '${FUNCTION_URL}?candidate_id=test&interview_id=test&question=Test&answer=Test&gpt_model=openai/gpt-4o-mini'"
 else
     echo ""
     echo -e "${RED}❌ Deployment failed${NC}"

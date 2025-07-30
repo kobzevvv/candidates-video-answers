@@ -1,10 +1,15 @@
 const functions = require('@google-cloud/functions-framework');
-const { OpenAI } = require('openai');
+const ModelClient = require('@azure-rest/ai-inference').default;
+const { isUnexpected } = require('@azure-rest/ai-inference');
+const { AzureKeyCredential } = require('@azure/core-auth');
 
-// Initialize OpenAI client
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// Initialize GitHub Models client
+const token = process.env.GITHUB_TOKEN;
+const endpoint = 'https://models.github.ai/inference';
+const client = ModelClient(
+  endpoint,
+  new AzureKeyCredential(token)
+);
 
 // Load the evaluation prompt
 const EVALUATION_PROMPT = `
@@ -42,7 +47,7 @@ functions.http('evaluateCandidate', async (req, res) => {
     const interviewId = req.query.interview_id || req.body?.interview_id;
     const question = req.query.question || req.body?.question;
     const answer = req.query.answer || req.body?.answer;
-    const gptModel = req.query.gpt_model || req.body?.gpt_model || 'gpt-3.5-turbo';
+    const gptModel = req.query.gpt_model || req.body?.gpt_model || 'openai/gpt-4o-mini';
 
     // Validate required parameters
     if (!candidateId || !interviewId) {
@@ -68,24 +73,30 @@ ${EVALUATION_PROMPT}
 Please evaluate this answer according to the criteria above.
 `;
 
-    // Call OpenAI API
-    const completion = await openai.chat.completions.create({
-      model: gptModel,
-      messages: [
-        {
-          role: 'system',
-          content: 'You are an expert interviewer evaluating candidate responses. Return only valid JSON.'
-        },
-        {
-          role: 'user',
-          content: evaluationRequest
-        }
-      ],
-      temperature: 0.3,
-      response_format: { type: 'json_object' }
+    // Call GitHub Models API
+    const response = await client.path('/chat/completions').post({
+      body: {
+        model: gptModel,
+        messages: [
+          {
+            role: 'system',
+            content: 'You are an expert interviewer evaluating candidate responses. Return only valid JSON.'
+          },
+          {
+            role: 'user',
+            content: evaluationRequest
+          }
+        ],
+        temperature: 0.3,
+        response_format: { type: 'json_object' }
+      }
     });
 
-    const evaluationResult = JSON.parse(completion.choices[0].message.content);
+    if (isUnexpected(response)) {
+      throw response.body.error;
+    }
+
+    const evaluationResult = JSON.parse(response.body.choices[0].message.content);
 
     // Add metadata to the response
     const response = {

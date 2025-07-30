@@ -34,7 +34,7 @@ jobs:
         echo "📡 Making test request to Cloud Function..."
         
         RESPONSE=$(curl -s -w "\n%{http_code}" \
-          "${CLOUD_FUNCTION_URL}?candidate_id=test&interview_id=test&question=What%20is%20your%20experience%3F&answer=I%20have%205%20years%20of%20experience%20in%20software%20development&gpt_model=gpt-3.5-turbo")
+          "${CLOUD_FUNCTION_URL}?candidate_id=test&interview_id=test&question=What%20is%20your%20experience%3F&answer=I%20have%205%20years%20of%20experience%20in%20software%20development&gpt_model=openai/gpt-4o-mini")
         
         HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
         BODY=$(echo "$RESPONSE" | sed '$d')
@@ -79,5 +79,5 @@ jobs:
           echo "Please check:" >> $GITHUB_STEP_SUMMARY
           echo "1. Is the Cloud Function deployed?" >> $GITHUB_STEP_SUMMARY
           echo "2. Is CLOUD_FUNCTION_URL set in GitHub Secrets?" >> $GITHUB_STEP_SUMMARY
-          echo "3. Does the Cloud Function have OPENAI_API_KEY?" >> $GITHUB_STEP_SUMMARY
+          echo "3. Does the Cloud Function have GITHUB_TOKEN?" >> $GITHUB_STEP_SUMMARY
         fi

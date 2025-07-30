@@ -43,19 +43,19 @@ jobs:
         
     - name: Test evaluation with specific interview
       env:
-        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        GITHUB_TOKEN: ${{ secrets.PAT_GIT_HUB }}
         CLOUD_FUNCTION_URL: ${{ secrets.CLOUD_FUNCTION_URL }}
         DATABASE_URL: ${{ secrets.DATABASE_URL }}
       run: |
         cd scripts/transcript-sync
         
         echo "🧪 Running evaluation test on interview: 688734e38fb4bc64261bffe0"
-        echo "📊 Using GPT model: gpt-3.5-turbo"
+        echo "📊 Using GPT model: openai/gpt-4o-mini"
         echo "🎯 This is a CI/CD test run"
         echo ""
         
         # Run evaluation for the test interview
-        node evaluate-by-interview.js "688734e38fb4bc64261bffe0" "gpt-3.5-turbo"
+        node evaluate-by-interview.js "688734e38fb4bc64261bffe0" "openai/gpt-4o-mini"
         
         # Check if evaluation was successful
         if [ $? -eq 0 ]; then

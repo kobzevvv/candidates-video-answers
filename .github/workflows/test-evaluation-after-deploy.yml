@@ -45,7 +45,7 @@ jobs:
     - name: Run test evaluation
       id: test-eval
       env:
-        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        GITHUB_TOKEN: ${{ secrets.PAT_GIT_HUB }}
         CLOUD_FUNCTION_URL: ${{ secrets.CLOUD_FUNCTION_URL }}
         DATABASE_URL: ${{ secrets.DATABASE_URL }}
       run: |

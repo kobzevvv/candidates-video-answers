@@ -1,6 +1,6 @@
 # Candidate Evaluation Cloud Function
 
-This Google Cloud Function evaluates candidate interview answers using configurable OpenAI GPT models (defaults to GPT-3.5-turbo).
+This Google Cloud Function evaluates candidate interview answers using GitHub Models (defaults to openai/gpt-4o-mini).
 
 ## Usage
 
@@ -9,11 +9,11 @@ This Google Cloud Function evaluates candidate interview answers using configura
 - `interview_id` (required): ID of the interview
 - `question` (required): The interview question
 - `answer` (required): The candidate's answer
-- `gpt_model` (optional): GPT model to use (defaults to 'gpt-3.5-turbo')
+- `gpt_model` (optional): GitHub Models model to use (defaults to 'openai/gpt-4o-mini')
 
 ### Example Request
 ```bash
-curl "https://your-region-your-project.cloudfunctions.net/evaluate-candidate?candidate_id=123&interview_id=456&question=Tell%20me%20about%20yourself&answer=I%20am%20a%20software%20engineer...&gpt_model=gpt-4"
+curl "https://your-region-your-project.cloudfunctions.net/evaluate-candidate?candidate_id=123&interview_id=456&question=Tell%20me%20about%20yourself&answer=I%20am%20a%20software%20engineer...&gpt_model=openai/gpt-4o"
 ```
 
 ### Response Format
@@ -28,16 +28,16 @@ curl "https://your-region-your-project.cloudfunctions.net/evaluate-candidate?can
     "openness": 9,
     "short_summary": "Well-structured answer with concrete examples"
   },
-  "model_used": "gpt-4",
+  "model_used": "openai/gpt-4o",
   "prompt_version": "1.0"
 }
 ```
 
 ## Deployment
 
-1. Set your OpenAI API key:
+1. Set your GitHub Personal Access Token:
 ```bash
-export OPENAI_API_KEY="your-api-key-here"
+export GITHUB_TOKEN="your-github-pat-here"
 ```
 
 2. Deploy to Google Cloud Functions:
@@ -46,4 +46,4 @@ npm run deploy
 ```
 
 ## Environment Variables
-- `OPENAI_API_KEY`: Your OpenAI API key (required)
+- `GITHUB_TOKEN`: Your GitHub Personal Access Token with 'repo' scope (required)

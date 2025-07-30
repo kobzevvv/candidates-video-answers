@@ -72,7 +72,7 @@ jobs:
           --region ${{ env.REGION }} \
           --timeout ${{ env.TIMEOUT }} \
           --memory ${{ env.MEMORY }} \
-          --set-env-vars OPENAI_API_KEY="${{ secrets.OPENAI_API_KEY }}" \
+          --set-env-vars GITHUB_TOKEN="${{ secrets.PAT_GIT_HUB }}" \
           --project ${{ secrets.GCP_PROJECT_ID }}
           
     - name: Get Function URL
