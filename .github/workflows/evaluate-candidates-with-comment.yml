@@ -1,0 +1,132 @@
+name: Evaluate Candidates (with Comment)
+
+on:
+  workflow_dispatch:
+    inputs:
+      position_id:
+        description: 'Position ID to evaluate all candidates for this position'
+        required: false
+        type: string
+      interview_id:
+        description: 'Specific Interview ID to re-evaluate'
+        required: false
+        type: string
+      gpt_model:
+        description: 'GPT model to use for evaluation'
+        required: false
+        type: choice
+        options:
+          - 'gpt-3.5-turbo'
+          - 'gpt-4'
+          - 'gpt-4-turbo'
+        default: 'gpt-3.5-turbo'
+      skip_evaluated:
+        description: 'Skip already evaluated answers and re-do all'
+        required: false
+        type: boolean
+        default: false
+      comment_issue_number:
+        description: 'Issue/PR number to comment results (optional)'
+        required: false
+        type: string
+
+jobs:
+  evaluate:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        
+    - name: Install dependencies
+      run: |
+        echo "📦 Installing dependencies in ai-evaluation..."
+        cd ai-evaluation
+        npm install
+        cd ..
+        echo "📦 Installing dependencies in scripts/transcript-sync..."
+        cd scripts/transcript-sync
+        npm install
+        cd ..
+        echo "✅ All dependencies installed"
+        
+    - name: Validate inputs
+      run: |
+        if [[ -z "${{ github.event.inputs.position_id }}" && -z "${{ github.event.inputs.interview_id }}" ]]; then
+          echo "Error: Either position_id or interview_id must be provided"
+          exit 1
+        fi
+        
+    - name: Run candidate evaluation
+      id: evaluation
+      env:
+        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        CLOUD_FUNCTION_URL: ${{ secrets.CLOUD_FUNCTION_URL }}
+        DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      run: |
+        cd scripts/transcript-sync
+        
+        # Create summary file
+        echo "# 🤖 AI Evaluation Results" > evaluation-summary.md
+        echo "" >> evaluation-summary.md
+        echo "**Date:** $(date)" >> evaluation-summary.md
+        echo "**GPT Model:** ${{ github.event.inputs.gpt_model }}" >> evaluation-summary.md
+        echo "**Skip Evaluated:** ${{ github.event.inputs.skip_evaluated }}" >> evaluation-summary.md
+        echo "" >> evaluation-summary.md
+        
+        # Run evaluation and capture output
+        if [[ -n "${{ github.event.inputs.position_id }}" ]]; then
+          echo "**Position ID:** ${{ github.event.inputs.position_id }}" >> evaluation-summary.md
+          echo "" >> evaluation-summary.md
+          echo "## Evaluation Log" >> evaluation-summary.md
+          echo '```' >> evaluation-summary.md
+          node evaluate-by-position.js "${{ github.event.inputs.position_id }}" "${{ github.event.inputs.skip_evaluated }}" "${{ github.event.inputs.gpt_model }}" 2>&1 | tee -a evaluation-summary.md
+          echo '```' >> evaluation-summary.md
+        elif [[ -n "${{ github.event.inputs.interview_id }}" ]]; then
+          echo "**Interview ID:** ${{ github.event.inputs.interview_id }}" >> evaluation-summary.md
+          echo "" >> evaluation-summary.md
+          echo "## Evaluation Log" >> evaluation-summary.md
+          echo '```' >> evaluation-summary.md
+          node evaluate-by-interview.js "${{ github.event.inputs.interview_id }}" "${{ github.event.inputs.gpt_model }}" 2>&1 | tee -a evaluation-summary.md
+          echo '```' >> evaluation-summary.md
+        fi
+        
+        # Extract summary stats
+        echo "" >> evaluation-summary.md
+        echo "## Summary Statistics" >> evaluation-summary.md
+        tail -n 10 evaluation-summary.md | grep -E "✅|⏭️|❌|📊|🏁|⏳" >> evaluation-summary.md || true
+        
+        # Set output
+        echo "summary<<EOF" >> $GITHUB_OUTPUT
+        cat evaluation-summary.md >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
+        
+    - name: Upload evaluation results
+      uses: actions/upload-artifact@v4
+      with:
+        name: evaluation-results-${{ github.run_number }}
+        path: scripts/transcript-sync/evaluation-results/
+        retention-days: 30
+        
+    - name: Upload evaluation summary
+      uses: actions/upload-artifact@v4
+      with:
+        name: evaluation-summary-${{ github.run_number }}
+        path: scripts/transcript-sync/evaluation-summary.md
+        retention-days: 30
+        
+    - name: Comment on issue/PR
+      if: ${{ github.event.inputs.comment_issue_number != '' }}
+      uses: peter-evans/create-or-update-comment@v4
+      with:
+        issue-number: ${{ github.event.inputs.comment_issue_number }}
+        body: ${{ steps.evaluation.outputs.summary }}
+        
+    - name: Create summary
+      run: |
+        echo "${{ steps.evaluation.outputs.summary }}" >> $GITHUB_STEP_SUMMARY
