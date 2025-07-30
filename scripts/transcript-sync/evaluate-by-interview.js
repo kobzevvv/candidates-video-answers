@@ -69,34 +69,46 @@ async function main() {
       process.exit(1);
     }
 
-    const candidateId = questionAnswers[0].candidate_id;
-    console.log(`👤 Candidate ID: ${candidateId}`);
+    const firstAnswer = questionAnswers[0];
+    const candidateInfo = `${firstAnswer.candidate_first_name} ${firstAnswer.candidate_last_name} (${firstAnswer.candidate_email})`;
+    console.log(`👤 Candidate: ${candidateInfo}`);
     console.log(`📋 Found ${questionAnswers.length} question-answer pairs`);
 
     let processedCount = 0;
     let errorCount = 0;
 
     for (const qa of questionAnswers) {
-      const { question_id, question_text, answer_text } = qa;
+      const { 
+        answer_id, 
+        question_id, 
+        question_title, 
+        question_description,
+        transcription_text,
+        candidate_email
+      } = qa;
       
-      if (!question_text || !answer_text) {
-        console.log(`⚠️  Skipping incomplete Q&A: ${question_id}`);
+      if (!transcription_text || !question_title) {
+        console.log(`⚠️  Skipping incomplete Q&A: answer_id ${answer_id}`);
         continue;
       }
 
-      console.log(`🔍 Re-evaluating Q&A pair: ${question_id}`);
+      // Use question_title as the main question, with description as context if available
+      const questionText = question_description ? `${question_title}: ${question_description}` : question_title;
+
+      console.log(`🔍 Re-evaluating answer ${answer_id} for question: "${question_title}"`);
       
-      const evaluation = await evaluateAnswer(candidateId, interviewId, question_text, answer_text, gptModel);
+      const evaluation = await evaluateAnswer(candidate_email, interviewId, questionText, transcription_text, gptModel);
       if (evaluation && evaluation.evaluation) {
-        // Save to datamart
-        await dataModel.updateEvaluationResults(interviewId, question_id, evaluation.evaluation, evaluation.model_used);
+        // Save to datamart using answer_id
+        await dataModel.updateEvaluationResults(answer_id, interviewId, question_id, evaluation.evaluation, evaluation.model_used);
         
         // Also save to file for backup
         await saveEvaluationResult({
           ...evaluation,
+          answer_id: answer_id,
           question_id: question_id,
-          question: question_text,
-          answer: answer_text
+          question: questionText,
+          answer: transcription_text
         }, outputDir);
         
         processedCount++;
