@@ -24,13 +24,30 @@ if (process.env.DATABASE_URL) {
 // Create evaluation results table (separate from the existing view)
 async function createTables() {
   try {
+    // Check if table exists with wrong data types and drop if needed
+    try {
+      const tableInfo = await sql`
+        SELECT column_name, data_type 
+        FROM information_schema.columns 
+        WHERE table_name = 'ai_evaluation_results' 
+        AND column_name = 'answer_id'
+      `;
+      
+      if (tableInfo.length > 0 && tableInfo[0].data_type === 'integer') {
+        console.log('🔄 Dropping ai_evaluation_results table to fix data types...');
+        await sql`DROP TABLE IF EXISTS ai_evaluation_results`;
+      }
+    } catch (error) {
+      // Table doesn't exist yet, that's fine
+    }
+
     // Create ai_evaluation_results table to store evaluation scores
     await sql`
       CREATE TABLE IF NOT EXISTS ai_evaluation_results (
         id SERIAL PRIMARY KEY,
-        answer_id INTEGER NOT NULL UNIQUE,
+        answer_id VARCHAR(255) NOT NULL UNIQUE,
         interview_id VARCHAR(255) NOT NULL,
-        question_id INTEGER NOT NULL,
+        question_id VARCHAR(255) NOT NULL,
         evaluation_addressing INTEGER,
         evaluation_be_specific INTEGER,
         evaluation_openness INTEGER,
