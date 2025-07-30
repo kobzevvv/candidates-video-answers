@@ -37,10 +37,23 @@ Return your evaluation in JSON format:
 `;
 
 functions.http('evaluateCandidate', async (req, res) => {
+  const requestStartTime = Date.now();
+  console.log(`[${new Date().toISOString()}] Request received - Method: ${req.method}`);
+  
   // Enable CORS
   res.set('Access-Control-Allow-Origin', '*');
   res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.set('Access-Control-Allow-Headers', 'Content-Type');
+
+  // Health check endpoint
+  if (req.path === '/health' || req.url === '/health') {
+    return res.json({ 
+      status: 'healthy', 
+      timestamp: new Date().toISOString(),
+      hasToken: !!token,
+      uptime: process.uptime()
+    });
+  }
 
   if (req.method === 'OPTIONS') {
     res.status(204).send('');
@@ -62,6 +75,8 @@ functions.http('evaluateCandidate', async (req, res) => {
     const question = req.query.question || req.body?.question;
     const answer = req.query.answer || req.body?.answer;
     const gptModel = req.query.gpt_model || req.body?.gpt_model || 'openai/gpt-4o-mini';
+    
+    console.log(`[${new Date().toISOString()}] Request params - Model: ${gptModel}, Candidate: ${candidateId}, Interview: ${interviewId}`);
 
     // Validate required parameters
     if (!candidateId || !interviewId) {
@@ -88,6 +103,11 @@ Please evaluate this answer according to the criteria above.
 `;
 
     // Call GitHub Models API
+    console.log(`[${new Date().toISOString()}] Calling GitHub Models API with model: ${gptModel}`);
+    console.log(`[${new Date().toISOString()}] Question length: ${question.length}, Answer length: ${answer.length}`);
+    
+    const apiStartTime = Date.now();
+    
     const response = await client.path('/chat/completions').post({
       body: {
         model: gptModel,
@@ -103,10 +123,17 @@ Please evaluate this answer according to the criteria above.
         ],
         temperature: 0.3,
         response_format: { type: 'json_object' }
+      },
+      requestOptions: {
+        timeout: 30000 // 30 second timeout for API call
       }
     });
 
+    const apiDuration = Date.now() - apiStartTime;
+    console.log(`[${new Date().toISOString()}] API response received in ${apiDuration}ms`);
+
     if (isUnexpected(response)) {
+      console.error(`[${new Date().toISOString()}] API returned unexpected response:`, response.body);
       throw response.body.error;
     }
 
@@ -122,13 +149,25 @@ Please evaluate this answer according to the criteria above.
       prompt_version: '1.0'
     };
 
+    const totalDuration = Date.now() - requestStartTime;
+    console.log(`[${new Date().toISOString()}] Request completed successfully in ${totalDuration}ms`);
+    
     res.json(finalResponse);
 
   } catch (error) {
-    console.error('Error evaluating candidate:', error);
+    const totalDuration = Date.now() - requestStartTime;
+    console.error(`[${new Date().toISOString()}] Error after ${totalDuration}ms:`, error);
+    console.error(`[${new Date().toISOString()}] Error details:`, {
+      message: error.message,
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      data: error.response?.data
+    });
+    
     res.status(500).json({
       error: 'Internal server error',
-      message: error.message
+      message: error.message,
+      duration: totalDuration
     });
   }
 });

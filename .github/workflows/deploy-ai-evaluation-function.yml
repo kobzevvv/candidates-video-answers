@@ -24,8 +24,11 @@ env:
   FUNCTION_NAME: evaluate-candidate
   RUNTIME: nodejs18
   ENTRY_POINT: evaluateCandidate
-  MEMORY: 512MB
-  TIMEOUT: 540s
+  MEMORY: 1GB
+  TIMEOUT: 300s
+  MIN_INSTANCES: 1
+  MAX_INSTANCES: 100
+  CONCURRENCY: 1
 
 jobs:
   deploy:
@@ -72,6 +75,9 @@ jobs:
           --region ${{ env.REGION }} \
           --timeout ${{ env.TIMEOUT }} \
           --memory ${{ env.MEMORY }} \
+          --min-instances ${{ env.MIN_INSTANCES }} \
+          --max-instances ${{ env.MAX_INSTANCES }} \
+          --concurrency ${{ env.CONCURRENCY }} \
           --set-env-vars GITHUB_TOKEN="${{ secrets.PAT_GIT_HUB }}" \
           --project ${{ secrets.GCP_PROJECT_ID }}
           
