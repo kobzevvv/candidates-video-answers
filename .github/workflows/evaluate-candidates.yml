@@ -16,13 +16,9 @@ on:
         required: false
         type: choice
         options:
-          - 'google/gemini-1.5-flash' # 💰⚡ Cheapest & Fast
-          - 'google/gemini-2.0-flash' # 💰⚡ Cheap & Fast  
-          - 'openai/gpt-4o-mini'      # 💵 Moderate cost
-          - 'meta/llama-3.1-8b'       # 💰 Cheap
-          - 'microsoft/phi-3.5'       # 💰⚡ Cheap & Fast
+          - 'openai/gpt-4o-mini'      # 💰⚡ Best value - Fast & Affordable
           - 'openai/gpt-4o'          # 💸 Higher quality
-          - 'openai/gpt-4.1'         # 💸 Highest quality
+          - 'openai/gpt-4.1'         # 💸💎 Highest quality & fastest
         default: 'openai/gpt-4o-mini'
       skip_evaluated:
         description: 'Skip already evaluated answers and re-do all'
