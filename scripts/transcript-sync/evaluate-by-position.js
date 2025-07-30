@@ -11,6 +11,7 @@ const dataModel = new InterviewDataModel();
 
 async function evaluateAnswer(candidateId, interviewId, question, answer, gptModel = 'gpt-3.5-turbo') {
   try {
+    console.log(`🌐 Calling Cloud Function: ${CLOUD_FUNCTION_URL}`);
     const response = await axios.get(CLOUD_FUNCTION_URL, {
       params: {
         candidate_id: candidateId,
@@ -18,11 +19,26 @@ async function evaluateAnswer(candidateId, interviewId, question, answer, gptMod
         question: question,
         answer: answer,
         gpt_model: gptModel
-      }
+      },
+      timeout: 60000 // 60 second timeout
     });
     return response.data;
   } catch (error) {
-    console.error(`Error evaluating answer for interview ${interviewId}:`, error.message);
+    console.error(`❌ Error evaluating answer for interview ${interviewId}:`);
+    console.error(`   Error message: ${error.message}`);
+    console.error(`   Error code: ${error.code}`);
+    if (error.response) {
+      console.error(`   HTTP Status: ${error.response.status}`);
+      console.error(`   Response data:`, error.response.data);
+    }
+    if (error.request) {
+      console.error(`   Request failed - no response received`);
+      console.error(`   Request config:`, {
+        url: error.config?.url,
+        method: error.config?.method,
+        timeout: error.config?.timeout
+      });
+    }
     return null;
   }
 }
@@ -44,6 +60,16 @@ async function main() {
 
   if (!CLOUD_FUNCTION_URL || !process.env.DATABASE_URL) {
     console.error('Missing required environment variables: CLOUD_FUNCTION_URL, DATABASE_URL');
+    process.exit(1);
+  }
+
+  console.log(`🔗 Cloud Function URL: ${CLOUD_FUNCTION_URL}`);
+  console.log(`🗄️ Database URL: ${process.env.DATABASE_URL ? '[SET]' : '[NOT SET]'}`);
+  console.log(`🔑 OpenAI API Key: ${process.env.OPENAI_API_KEY ? '[SET]' : '[NOT SET]'}`);
+  
+  // Validate Cloud Function URL format
+  if (!CLOUD_FUNCTION_URL.startsWith('http')) {
+    console.error('❌ CLOUD_FUNCTION_URL must start with http:// or https://');
     process.exit(1);
   }
 
