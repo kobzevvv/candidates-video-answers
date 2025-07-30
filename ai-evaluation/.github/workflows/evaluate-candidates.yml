@@ -1,0 +1,88 @@
+name: Evaluate Candidates
+
+on:
+  workflow_dispatch:
+    inputs:
+      position_id:
+        description: 'Position ID to evaluate all candidates for this position'
+        required: false
+        type: string
+      interview_id:
+        description: 'Specific Interview ID to re-evaluate'
+        required: false
+        type: string
+      gpt_model:
+        description: 'GPT model to use for evaluation'
+        required: false
+        type: choice
+        options:
+          - 'gpt-3.5-turbo'
+          - 'gpt-4'
+          - 'gpt-4-turbo'
+        default: 'gpt-3.5-turbo'
+      skip_evaluated:
+        description: 'Skip already evaluated answers and re-do all'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  evaluate:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        
+    - name: Install dependencies
+      run: |
+        cd scripts/transcript-sync
+        npm install
+        
+    - name: Validate inputs
+      run: |
+        if [[ -z "${{ github.event.inputs.position_id }}" && -z "${{ github.event.inputs.interview_id }}" ]]; then
+          echo "Error: Either position_id or interview_id must be provided"
+          exit 1
+        fi
+        
+    - name: Run candidate evaluation
+      env:
+        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        CLOUD_FUNCTION_URL: ${{ secrets.CLOUD_FUNCTION_URL }}
+        DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      run: |
+        cd scripts/transcript-sync
+        
+        if [[ -n "${{ github.event.inputs.position_id }}" ]]; then
+          echo "Evaluating all candidates for position: ${{ github.event.inputs.position_id }}"
+          echo "GPT Model: ${{ github.event.inputs.gpt_model }}"
+          echo "Skip evaluated: ${{ github.event.inputs.skip_evaluated }}"
+          node evaluate-by-position.js "${{ github.event.inputs.position_id }}" "${{ github.event.inputs.skip_evaluated }}" "${{ github.event.inputs.gpt_model }}"
+        elif [[ -n "${{ github.event.inputs.interview_id }}" ]]; then
+          echo "Re-evaluating specific interview: ${{ github.event.inputs.interview_id }}"
+          echo "GPT Model: ${{ github.event.inputs.gpt_model }}"
+          node evaluate-by-interview.js "${{ github.event.inputs.interview_id }}" "${{ github.event.inputs.gpt_model }}"
+        fi
+        
+    - name: Upload evaluation results
+      uses: actions/upload-artifact@v4
+      with:
+        name: evaluation-results-${{ github.run_number }}
+        path: scripts/transcript-sync/evaluation-results/
+        retention-days: 30
+        
+    - name: Summary
+      run: |
+        echo "✅ Candidate evaluation completed successfully"
+        if [[ -n "${{ github.event.inputs.position_id }}" ]]; then
+          echo "📊 Processed position: ${{ github.event.inputs.position_id }}"
+        fi
+        if [[ -n "${{ github.event.inputs.interview_id }}" ]]; then
+          echo "🔄 Re-evaluated interview: ${{ github.event.inputs.interview_id }}"
+        fi
