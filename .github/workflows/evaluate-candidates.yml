@@ -12,16 +12,18 @@ on:
         required: false
         type: string
       gpt_model:
-        description: 'AI model to use for evaluation (💰 = cheapest, ⚡ = fastest)'
+        description: 'AI model to use for evaluation'
         required: false
         type: choice
         options:
-          - 'openai/gpt-4o-mini'      # 💰⚡ Best value - Fast & Affordable
-          - 'openai/gpt-4o'          # 💸 Higher quality
-          - 'openai/gpt-4.1'         # 💸💎 Highest quality & fastest
-          - 'openai/gpt-3.5-turbo'
-          - 'microsoft/phi-3.5'
-        default: 'microsoft/phi-3.5'
+          - 'google/gemini-1.5-flash'         # ⚡ Fast & efficient (DEFAULT)
+          - 'gpt-4o-mini'                     # 💰 Cost-effective OpenAI
+          - 'gpt-4o'                          # 🎯 High quality OpenAI
+          - 'claude-3-5-sonnet-latest'        # 🔍 Excellent for analysis
+          - 'meta-llama/llama-3.1-70b-instruct' # 🌐 Open source
+          - 'mistral/mistral-large-2407'      # 🇪🇺 European model
+          - 'google/gemini-1.5-pro'           # 📚 Large context window
+        default: 'google/gemini-1.5-flash'
       skip_evaluated:
         description: 'Skip already evaluated answers and re-do all'
         required: false
