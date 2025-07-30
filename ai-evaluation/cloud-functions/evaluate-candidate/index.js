@@ -99,7 +99,7 @@ Please evaluate this answer according to the criteria above.
     const evaluationResult = JSON.parse(response.body.choices[0].message.content);
 
     // Add metadata to the response
-    const response = {
+    const finalResponse = {
       candidate_id: candidateId,
       interview_id: interviewId,
       timestamp: new Date().toISOString(),
@@ -108,7 +108,7 @@ Please evaluate this answer according to the criteria above.
       prompt_version: '1.0'
     };
 
-    res.json(response);
+    res.json(finalResponse);
 
   } catch (error) {
     console.error('Error evaluating candidate:', error);
