@@ -31,8 +31,10 @@ async function testCloudFunction() {
   
   try {
     const startTime = Date.now();
-    const response = await axios.get(CLOUD_FUNCTION_URL, {
-      params: TEST_DATA,
+    const response = await axios.post(CLOUD_FUNCTION_URL, TEST_DATA, {
+      headers: {
+        'Content-Type': 'application/json'
+      },
       timeout: 30000,
       validateStatus: () => true // Accept any status code
     });

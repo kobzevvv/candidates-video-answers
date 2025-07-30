@@ -12,13 +12,15 @@ const dataModel = new InterviewDataModel();
 async function evaluateAnswer(candidateId, interviewId, question, answer, gptModel = 'gpt-3.5-turbo') {
   try {
     console.log(`🌐 Calling Cloud Function: ${CLOUD_FUNCTION_URL}`);
-    const response = await axios.get(CLOUD_FUNCTION_URL, {
-      params: {
-        candidate_id: candidateId,
-        interview_id: interviewId,
-        question: question,
-        answer: answer,
-        gpt_model: gptModel
+    const response = await axios.post(CLOUD_FUNCTION_URL, {
+      candidate_id: candidateId,
+      interview_id: interviewId,
+      question: question,
+      answer: answer,
+      gpt_model: gptModel
+    }, {
+      headers: {
+        'Content-Type': 'application/json'
       },
       timeout: 60000 // 60 second timeout
     });

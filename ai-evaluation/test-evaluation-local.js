@@ -20,13 +20,15 @@ async function evaluateAnswer(candidateId, interviewId, question, answer, gptMod
       gpt_model: gptModel
     });
     
-    const response = await axios.get(CLOUD_FUNCTION_URL, {
-      params: {
-        candidate_id: candidateId,
-        interview_id: interviewId,
-        question: question,
-        answer: answer,
-        gpt_model: gptModel
+    const response = await axios.post(CLOUD_FUNCTION_URL, {
+      candidate_id: candidateId,
+      interview_id: interviewId,
+      question: question,
+      answer: answer,
+      gpt_model: gptModel
+    }, {
+      headers: {
+        'Content-Type': 'application/json'
       },
       timeout: 30000,
       validateStatus: () => true

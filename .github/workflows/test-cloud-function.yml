@@ -34,7 +34,16 @@ jobs:
         echo "📡 Making test request to Cloud Function..."
         
         RESPONSE=$(curl -s -w "\n%{http_code}" \
-          "${CLOUD_FUNCTION_URL}?candidate_id=test&interview_id=test&question=What%20is%20your%20experience%3F&answer=I%20have%205%20years%20of%20experience%20in%20software%20development&gpt_model=openai/gpt-4o-mini")
+          -X POST \
+          -H "Content-Type: application/json" \
+          -d '{
+            "candidate_id": "test",
+            "interview_id": "test",
+            "question": "What is your experience?",
+            "answer": "I have 5 years of experience in software development",
+            "gpt_model": "openai/gpt-4o-mini"
+          }' \
+          "${CLOUD_FUNCTION_URL}")
         
         HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
         BODY=$(echo "$RESPONSE" | sed '$d')

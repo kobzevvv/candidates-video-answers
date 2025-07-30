@@ -88,8 +88,11 @@ jobs:
       run: |
         echo "🧪 Testing deployed function..."
         curl -s -o /dev/null -w "HTTP Status: %{http_code}\n" \
-          "${{ steps.function-url.outputs.function_url }}?candidate_id=test&interview_id=test&question=test&answer=test&gpt_model=gpt-3.5-turbo" \
-          || echo "⚠️ Test request failed (this is expected if OpenAI API key is not set)"
+          -X POST \
+          -H "Content-Type: application/json" \
+          -d '{"candidate_id":"test","interview_id":"test","question":"test","answer":"test","gpt_model":"openai/gpt-4o-mini"}' \
+          "${{ steps.function-url.outputs.function_url }}" \
+          || echo "⚠️ Test request failed (this is expected if GITHUB_TOKEN is not set)"
           
     - name: Update GitHub Secret (if needed)
       run: |
