@@ -16,14 +16,11 @@ on:
         required: false
         type: choice
         options:
-          - 'google/gemini-1.5-flash'         # ⚡ Fast & efficient (DEFAULT)
-          - 'gpt-4o-mini'                     # 💰 Cost-effective OpenAI
-          - 'gpt-4o'                          # 🎯 High quality OpenAI
-          - 'claude-3-5-sonnet-latest'        # 🔍 Excellent for analysis
-          - 'meta-llama/llama-3.1-70b-instruct' # 🌐 Open source
-          - 'mistral/mistral-large-2407'      # 🇪🇺 European model
-          - 'google/gemini-1.5-pro'           # 📚 Large context window
-        default: 'google/gemini-1.5-flash'
+          - 'gpt-4o-mini'                     # 💰 Fast & cost-effective (DEFAULT)
+          - 'gpt-4o'                          # 🎯 Most capable for complex tasks
+          - 'openai/gpt-4o-mini'              # Same as gpt-4o-mini (with prefix)
+          - 'openai/gpt-4o'                   # Same as gpt-4o (with prefix)
+        default: 'gpt-4o-mini'
       skip_evaluated:
         description: 'Skip already evaluated answers and re-do all'
         required: false
