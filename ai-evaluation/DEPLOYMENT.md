@@ -1,8 +1,20 @@
 # AI Evaluation System Deployment Guide
 
-## 🚀 Quick Deployment
+## 🚀 Deployment Options
 
-### 1. Deploy Google Cloud Function
+### Option A: Automatic Deployment (Recommended)
+
+Set up automatic deployment that triggers on every push to main:
+
+1. **Configure GitHub Secrets** (one-time setup):
+   - Follow the guide in [SETUP_GCP_DEPLOYMENT.md](./SETUP_GCP_DEPLOYMENT.md)
+   - Add `GCP_PROJECT_ID`, `GCP_SA_KEY`, and `OPENAI_API_KEY`
+
+2. **Push to main** - the Cloud Function deploys automatically!
+
+3. **Get the function URL** from the GitHub Actions summary
+
+### Option B: Manual Deployment
 
 ```bash
 cd ai-evaluation/cloud-functions/evaluate-candidate
@@ -16,7 +28,7 @@ The script will:
 - ✅ Deploy the function
 - ✅ Give you the function URL
 
-### 2. Set GitHub Secrets
+## 2. Set GitHub Secrets
 
 After deployment, add these secrets to your GitHub repository:
 
@@ -29,7 +41,7 @@ After deployment, add these secrets to your GitHub repository:
 | `DATABASE_URL` | Your Neon database connection string |
 | `OPENAI_API_KEY` | Your OpenAI API key (sk-...) |
 
-### 3. Trigger GitHub Action
+## 3. Trigger GitHub Action
 
 #### Option A: Via GitHub UI
 1. Go to: https://github.com/kobzevvv/candidates-video-answers/actions

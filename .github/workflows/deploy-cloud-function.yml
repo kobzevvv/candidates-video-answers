@@ -1,0 +1,122 @@
+name: Deploy Cloud Function
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'ai-evaluation/cloud-functions/evaluate-candidate/**'
+      - '.github/workflows/deploy-cloud-function.yml'
+  workflow_dispatch:
+    inputs:
+      region:
+        description: 'Google Cloud region'
+        required: false
+        type: choice
+        options:
+          - 'us-central1'
+          - 'us-east1'
+          - 'europe-west1'
+          - 'asia-northeast1'
+        default: 'us-central1'
+
+env:
+  FUNCTION_NAME: evaluate-candidate
+  RUNTIME: nodejs18
+  ENTRY_POINT: evaluateCandidate
+  MEMORY: 512MB
+  TIMEOUT: 540s
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v2
+      with:
+        credentials_json: ${{ secrets.GCP_SA_KEY }}
+        
+    - name: Set up Cloud SDK
+      uses: google-github-actions/setup-gcloud@v2
+      with:
+        project_id: ${{ secrets.GCP_PROJECT_ID }}
+        
+    - name: Set deployment region
+      run: |
+        if [ "${{ github.event_name }}" == "workflow_dispatch" ] && [ -n "${{ github.event.inputs.region }}" ]; then
+          echo "REGION=${{ github.event.inputs.region }}" >> $GITHUB_ENV
+        else
+          echo "REGION=us-central1" >> $GITHUB_ENV
+        fi
+        
+    - name: Deploy Cloud Function
+      run: |
+        echo "🚀 Deploying Cloud Function to ${{ env.REGION }}..."
+        
+        cd ai-evaluation/cloud-functions/evaluate-candidate
+        
+        gcloud functions deploy ${{ env.FUNCTION_NAME }} \
+          --runtime ${{ env.RUNTIME }} \
+          --trigger-http \
+          --allow-unauthenticated \
+          --entry-point ${{ env.ENTRY_POINT }} \
+          --region ${{ env.REGION }} \
+          --timeout ${{ env.TIMEOUT }} \
+          --memory ${{ env.MEMORY }} \
+          --set-env-vars OPENAI_API_KEY="${{ secrets.OPENAI_API_KEY }}" \
+          --project ${{ secrets.GCP_PROJECT_ID }}
+          
+    - name: Get Function URL
+      id: function-url
+      run: |
+        FUNCTION_URL=$(gcloud functions describe ${{ env.FUNCTION_NAME }} \
+          --region ${{ env.REGION }} \
+          --format 'value(httpsTrigger.url)')
+        echo "function_url=$FUNCTION_URL" >> $GITHUB_OUTPUT
+        echo "🔗 Function URL: $FUNCTION_URL"
+        
+    - name: Test Function
+      run: |
+        echo "🧪 Testing deployed function..."
+        curl -s -o /dev/null -w "HTTP Status: %{http_code}\n" \
+          "${{ steps.function-url.outputs.function_url }}?candidate_id=test&interview_id=test&question=test&answer=test&gpt_model=gpt-3.5-turbo" \
+          || echo "⚠️ Test request failed (this is expected if OpenAI API key is not set)"
+          
+    - name: Update GitHub Secret (if needed)
+      run: |
+        echo ""
+        echo "📌 Cloud Function deployed successfully!"
+        echo ""
+        echo "🔗 Function URL: ${{ steps.function-url.outputs.function_url }}"
+        echo ""
+        echo "📝 Next steps:"
+        echo "1. Make sure this URL is set as CLOUD_FUNCTION_URL in GitHub Secrets"
+        echo "2. Go to: https://github.com/${{ github.repository }}/settings/secrets/actions"
+        echo "3. Update CLOUD_FUNCTION_URL with the above URL"
+        
+    - name: Create deployment summary
+      run: |
+        echo "## 🚀 Cloud Function Deployment Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "- **Function Name:** ${{ env.FUNCTION_NAME }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Region:** ${{ env.REGION }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Runtime:** ${{ env.RUNTIME }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Memory:** ${{ env.MEMORY }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Timeout:** ${{ env.TIMEOUT }}" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### 🔗 Function URL" >> $GITHUB_STEP_SUMMARY
+        echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+        echo "${{ steps.function-url.outputs.function_url }}" >> $GITHUB_STEP_SUMMARY
+        echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### 📝 Update GitHub Secret" >> $GITHUB_STEP_SUMMARY
+        echo "Update \`CLOUD_FUNCTION_URL\` in [GitHub Secrets](https://github.com/${{ github.repository }}/settings/secrets/actions) with the above URL." >> $GITHUB_STEP_SUMMARY
