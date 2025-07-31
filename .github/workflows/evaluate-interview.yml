@@ -1,0 +1,97 @@
+name: Evaluate Interview with AI
+
+on:
+  workflow_dispatch:
+    inputs:
+      interview_id:
+        description: 'Interview ID to evaluate'
+        required: true
+        type: string
+      gpt_model:
+        description: 'GPT Model to use'
+        required: false
+        type: choice
+        default: 'google/gemini-1.5-flash'
+        options:
+          - 'google/gemini-1.5-flash'
+          - 'gpt-4o'
+          - 'gpt-4o-mini'
+          - 'claude-3-5-sonnet-latest'
+          - 'meta-llama/llama-3.1-70b-instruct'
+      rate_limit_delay:
+        description: 'Delay between requests (ms)'
+        required: false
+        type: number
+        default: 3000
+
+jobs:
+  evaluate:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+
+    - name: Install dependencies
+      run: |
+        cd scripts/transcript-sync
+        npm install
+
+    - name: Check GitHub API Rate Limits
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        echo "🔍 Checking GitHub API rate limits before evaluation..."
+        node scripts/check-github-models-limits.js || echo "⚠️ Rate limit check failed, continuing anyway"
+
+    - name: Run AI Evaluation
+      env:
+        DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        CLOUD_FUNCTION_URL: ${{ secrets.CLOUD_FUNCTION_URL }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        RATE_LIMIT_DELAY: ${{ github.event.inputs.rate_limit_delay }}
+        CHECK_RATE_LIMITS: 'false'  # Already checked in previous step
+      run: |
+        echo "🚀 Starting evaluation for interview: ${{ github.event.inputs.interview_id }}"
+        echo "🤖 Using model: ${{ github.event.inputs.gpt_model }}"
+        echo "⏱️ Rate limit delay: ${{ github.event.inputs.rate_limit_delay }}ms"
+        
+        node scripts/transcript-sync/evaluate-by-interview.js \
+          "${{ github.event.inputs.interview_id }}" \
+          "${{ github.event.inputs.gpt_model }}"
+
+    - name: Upload evaluation results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: evaluation-results-${{ github.event.inputs.interview_id }}
+        path: evaluation-results/
+        retention-days: 30
+
+    - name: Check final rate limits
+      if: always()
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        echo "📊 Final rate limit status:"
+        node scripts/check-github-models-limits.js || echo "Could not check final limits"
+
+    - name: Summary
+      if: always()
+      run: |
+        echo "## Evaluation Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "- **Interview ID**: ${{ github.event.inputs.interview_id }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Model Used**: ${{ github.event.inputs.gpt_model }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Rate Limit Delay**: ${{ github.event.inputs.rate_limit_delay }}ms" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        if [ -d "evaluation-results" ]; then
+          echo "### Results" >> $GITHUB_STEP_SUMMARY
+          echo "- **Files Generated**: $(ls -1 evaluation-results/ | wc -l)" >> $GITHUB_STEP_SUMMARY
+        fi
