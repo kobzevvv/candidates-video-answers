@@ -49,7 +49,7 @@ jobs:
         echo "🔍 Checking GitHub API rate limits before evaluation..."
         node scripts/check-github-models-limits.js || echo "⚠️ Rate limit check failed, continuing anyway"
 
-    - name: Run AI Evaluation
+    - name: Run AI Evaluation (Resume Mode)
       env:
         DATABASE_URL: ${{ secrets.DATABASE_URL }}
         CLOUD_FUNCTION_URL: ${{ secrets.CLOUD_FUNCTION_URL }}
@@ -60,8 +60,9 @@ jobs:
         echo "🚀 Starting evaluation for interview: ${{ github.event.inputs.interview_id }}"
         echo "🤖 Using model: ${{ github.event.inputs.gpt_model }}"
         echo "⏱️ Rate limit delay: ${{ github.event.inputs.rate_limit_delay }}ms"
+        echo "♻️ Using resume mode - will skip already evaluated answers"
         
-        node scripts/transcript-sync/evaluate-by-interview.js \
+        node scripts/transcript-sync/evaluate-by-interview-resume.js \
           "${{ github.event.inputs.interview_id }}" \
           "${{ github.event.inputs.gpt_model }}"
 

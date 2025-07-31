@@ -1,11 +1,17 @@
 #!/usr/bin/env node
 
-require('dotenv').config();
+// Load .env file if it exists (for local development)
+// GitHub Actions will provide these as environment variables directly
+const path = require('path');
+const fsSync = require('fs');
+const envPath = path.join(__dirname, '../../.env');
+if (fsSync.existsSync(envPath)) {
+  require('dotenv').config({ path: envPath });
+}
 
 const fs = require('fs').promises;
-const path = require('path');
 const axios = require('axios');
-const { InterviewDataModel, createTables } = require('../../ai-evaluation/data-model');
+const { InterviewDataModel, createTables, sql } = require('../../ai-evaluation/data-model');
 
 const CLOUD_FUNCTION_URL = process.env.CLOUD_FUNCTION_URL;
 const RATE_LIMIT_DELAY = process.env.RATE_LIMIT_DELAY ? parseInt(process.env.RATE_LIMIT_DELAY) : 3000; // Default 3 seconds
@@ -128,7 +134,7 @@ async function saveEvaluationResult(result, outputDir) {
 // Check if an evaluation already exists
 async function getExistingEvaluations(interviewId) {
   try {
-    const result = await dataModel.sql`
+    const result = await sql`
       SELECT answer_id, gpt_model, evaluation_timestamp 
       FROM video_answers_with_gpt_reviews 
       WHERE interview_id = ${interviewId}

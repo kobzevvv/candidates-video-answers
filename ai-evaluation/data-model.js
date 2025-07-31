@@ -282,5 +282,6 @@ module.exports = {
   InterviewDataModel,
   createTables,
   initDatabase,
-  CURRENT_PROMPT_VERSION
+  CURRENT_PROMPT_VERSION,
+  sql
 };
