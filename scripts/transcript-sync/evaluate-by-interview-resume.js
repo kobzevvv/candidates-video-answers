@@ -107,7 +107,7 @@ async function evaluateAnswer(candidateId, interviewId, question, answer, gptMod
       headers: {
         'Content-Type': 'application/json'
       },
-      timeout: 60000 // 60 second timeout
+      timeout: 240000 // 240 second timeout (4 minutes)
     });
     console.log(`✅ Cloud Function response received`);
     successfulRequests++;
