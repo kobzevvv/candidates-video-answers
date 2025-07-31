@@ -38,7 +38,7 @@ function getRequestsPerMinute() {
   return requestTimes.length;
 }
 
-async function evaluateAnswerWithRetry(candidateId, interviewId, question, answer, gptModel = 'google/gemini-1.5-flash', maxRetries = 3) {
+async function evaluateAnswerWithRetry(candidateId, interviewId, question, answer, gptModel = 'google/gemini-1.5-flash', maxRetries = 5) {
   let lastError = null;
   
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
@@ -57,7 +57,16 @@ async function evaluateAnswerWithRetry(candidateId, interviewId, question, answe
     // Check if it's a rate limit error
     if (lastError && lastError.response && lastError.response.status === 429) {
       if (attempt < maxRetries) {
-        const backoffDelay = Math.min(30000, 5000 * Math.pow(2, attempt - 1)); // Exponential backoff: 5s, 10s, 20s
+        // Different backoff strategies for different providers
+        const apiProvider = process.env.API_PROVIDER || 'auto';
+        let backoffDelay;
+        if (apiProvider === 'openai') {
+          // OpenAI has stricter rate limits, use longer delays
+          backoffDelay = Math.min(60000, 10000 * Math.pow(1.5, attempt - 1)); // 10s, 15s, 22.5s, 33.75s, 50.6s
+        } else {
+          // GitHub Models - standard backoff
+          backoffDelay = Math.min(30000, 5000 * Math.pow(2, attempt - 1)); // 5s, 10s, 20s, 30s
+        }
         console.log(`🔄 Rate limit hit. Retrying in ${backoffDelay}ms (attempt ${attempt + 1}/${maxRetries})...`);
         await delay(backoffDelay);
       }
@@ -76,15 +85,25 @@ async function evaluateAnswer(candidateId, interviewId, question, answer, gptMod
     totalRequests++;
     requestTimes.push(Date.now());
     const rpm = getRequestsPerMinute();
+    const apiProvider = process.env.API_PROVIDER || 'auto';
     console.log(`🌐 Calling Cloud Function: ${CLOUD_FUNCTION_URL}`);
     console.log(`📊 Rate limit status: ${rpm} requests/minute, Total: ${totalRequests}, Success: ${successfulRequests}, RateLimits: ${rateLimitErrors}`);
-    const response = await axios.post(CLOUD_FUNCTION_URL, {
+    
+    const requestBody = {
       candidate_id: candidateId,
       interview_id: interviewId,
       question: question,
       answer: answer,
       gpt_model: gptModel
-    }, {
+    };
+    
+    // Add API provider if specified
+    if (apiProvider !== 'auto') {
+      requestBody.api_provider = apiProvider;
+      console.log(`🌍 Using API provider: ${apiProvider}`);
+    }
+    
+    const response = await axios.post(CLOUD_FUNCTION_URL, requestBody, {
       headers: {
         'Content-Type': 'application/json'
       },

@@ -10,7 +10,8 @@
   "dependencies": {
     "@google-cloud/functions-framework": "^3.3.0",
     "@azure-rest/ai-inference": "latest",
-    "@azure/core-auth": "latest"
+    "@azure/core-auth": "latest",
+    "axios": "^1.6.0"
   },
   "engines": {
     "node": ">=20.0.0"

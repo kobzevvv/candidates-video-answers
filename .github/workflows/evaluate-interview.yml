@@ -7,17 +7,30 @@ on:
         description: 'Interview ID to evaluate'
         required: true
         type: string
+      api_provider:
+        description: 'API Provider to use'
+        required: false
+        type: choice
+        default: 'auto'
+        options:
+          - 'auto'
+          - 'github'
+          - 'openai'
       gpt_model:
-        description: 'GPT Model to use'
+        description: 'Model to use'
         required: false
         type: choice
         default: 'google/gemini-1.5-flash'
         options:
+          # GitHub Models
           - 'google/gemini-1.5-flash'
-          - 'gpt-4o'
-          - 'gpt-4o-mini'
           - 'claude-3-5-sonnet-latest'
           - 'meta-llama/llama-3.1-70b-instruct'
+          # OpenAI Models
+          - 'gpt-4o'
+          - 'gpt-4o-mini'
+          - 'gpt-4-turbo'
+          - 'gpt-3.5-turbo'
       rate_limit_delay:
         description: 'Delay between requests (ms)'
         required: false
@@ -54,11 +67,14 @@ jobs:
         DATABASE_URL: ${{ secrets.DATABASE_URL }}
         CLOUD_FUNCTION_URL: ${{ secrets.CLOUD_FUNCTION_URL }}
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY_V2 }}
+        API_PROVIDER: ${{ github.event.inputs.api_provider }}
         RATE_LIMIT_DELAY: ${{ github.event.inputs.rate_limit_delay }}
         CHECK_RATE_LIMITS: 'false'  # Already checked in previous step
       run: |
         echo "🚀 Starting evaluation for interview: ${{ github.event.inputs.interview_id }}"
         echo "🤖 Using model: ${{ github.event.inputs.gpt_model }}"
+        echo "🌐 API Provider: ${{ github.event.inputs.api_provider }}"
         echo "⏱️ Rate limit delay: ${{ github.event.inputs.rate_limit_delay }}ms"
         echo "♻️ Using resume mode - will skip already evaluated answers"
         
