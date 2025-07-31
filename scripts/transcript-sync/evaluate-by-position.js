@@ -17,20 +17,35 @@ async function delay(ms) {
 
 async function evaluateAnswer(candidateId, interviewId, question, answer, gptModel = 'google/gemini-1.5-flash') {
   try {
+    // Determine API provider
+    const apiProvider = process.env.API_PROVIDER || 'auto';
+    const isOpenAIModel = ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'gpt-3.5-turbo'].includes(gptModel) || gptModel.startsWith('openai/');
+    const willUseOpenAI = apiProvider === 'openai' || (apiProvider === 'auto' && isOpenAIModel);
+    
     console.log(`🌐 Calling Cloud Function: ${CLOUD_FUNCTION_URL}`);
-    const response = await axios.post(CLOUD_FUNCTION_URL, {
+    console.log(`🤖 Model: ${gptModel} | Provider: ${apiProvider === 'auto' ? (willUseOpenAI ? 'OpenAI (auto)' : 'GitHub Models (auto)') : apiProvider}`);
+    
+    const requestBody = {
       candidate_id: candidateId,
       interview_id: interviewId,
       question: question,
       answer: answer,
       gpt_model: gptModel
-    }, {
+    };
+    
+    if (apiProvider !== 'auto') {
+      requestBody.api_provider = apiProvider;
+    }
+    
+    const response = await axios.post(CLOUD_FUNCTION_URL, requestBody, {
       headers: {
         'Content-Type': 'application/json'
       },
       timeout: 240000 // 240 second timeout (4 minutes)
     });
     console.log(`✅ Cloud Function response received`);
+    const actualProvider = response.data.api_provider || 'unknown';
+    console.log(`🌍 Used API Provider: ${actualProvider}`);
     console.log(`📦 Response data:`, JSON.stringify(response.data, null, 2));
     return response.data;
   } catch (error) {
@@ -76,6 +91,7 @@ async function main() {
   console.log(`🔗 Cloud Function URL: ${CLOUD_FUNCTION_URL}`);
   console.log(`🗄️ Database URL: ${process.env.DATABASE_URL ? '[SET]' : '[NOT SET]'}`);
   console.log(`🔑 OpenAI API Key: ${process.env.OPENAI_API_KEY ? '[SET]' : '[NOT SET]'}`);
+  console.log(`🌍 API Provider: ${process.env.API_PROVIDER || 'auto (will be determined by model name)'}`);
   
   // Validate Cloud Function URL format
   if (!CLOUD_FUNCTION_URL.startsWith('http')) {
@@ -89,6 +105,13 @@ async function main() {
   console.log(`🚀 Starting evaluation for position: ${positionId}`);
   console.log(`🤖 Using GPT model: ${gptModel}`);
   console.log(`⏭️  Skip evaluated: ${skipEvaluated}`);
+  
+  // Show which API will likely be used
+  const isOpenAIModel = ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'gpt-3.5-turbo'].includes(gptModel);
+  if (isOpenAIModel && !process.env.OPENAI_API_KEY) {
+    console.warn(`⚠️  WARNING: Using OpenAI model '${gptModel}' but OPENAI_API_KEY is not set!`);
+    console.warn(`⚠️  The Cloud Function will fail unless it has OPENAI_API_KEY configured.`);
+  }
   
   try {
     // Ensure tables exist

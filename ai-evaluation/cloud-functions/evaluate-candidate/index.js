@@ -2,19 +2,22 @@ const functions = require('@google-cloud/functions-framework');
 const ModelClient = require('@azure-rest/ai-inference').default;
 const { isUnexpected } = require('@azure-rest/ai-inference');
 const { AzureKeyCredential } = require('@azure/core-auth');
+const axios = require('axios');
 
-// Initialize GitHub Models client
-const token = process.env.GITHUB_TOKEN;
-const endpoint = 'https://models.github.ai/inference';
+// Initialize API clients
+const githubToken = process.env.GITHUB_TOKEN;
+const openaiApiKey = process.env.OPENAI_API_KEY;
+const githubEndpoint = 'https://models.github.ai/inference';
 
-// Check if token exists before creating client
-if (!token) {
-  console.error('GITHUB_TOKEN environment variable is not set');
+// Check tokens
+if (!githubToken && !openaiApiKey) {
+  console.error('Neither GITHUB_TOKEN nor OPENAI_API_KEY environment variables are set');
 }
 
-const client = token ? ModelClient(
-  endpoint,
-  new AzureKeyCredential(token)
+// GitHub Models client
+const githubClient = githubToken ? ModelClient(
+  githubEndpoint,
+  new AzureKeyCredential(githubToken)
 ) : null;
 
 // Load the evaluation prompt
@@ -36,6 +39,54 @@ Return your evaluation in JSON format:
 }
 `;
 
+// Helper function to call OpenAI API directly
+async function callOpenAIAPI(gptModel, evaluationRequest) {
+  const openAIModel = gptModel.startsWith('openai/') ? gptModel.replace('openai/', '') : gptModel;
+  
+  const response = await axios.post('https://api.openai.com/v1/chat/completions', {
+    model: openAIModel,
+    messages: [
+      {
+        role: 'system',
+        content: 'You are an expert interviewer evaluating candidate responses. Return only valid JSON.'
+      },
+      {
+        role: 'user',
+        content: evaluationRequest
+      }
+    ],
+    temperature: 0.3,
+    response_format: { type: 'json_object' }
+  }, {
+    headers: {
+      'Authorization': `Bearer ${openaiApiKey}`,
+      'Content-Type': 'application/json'
+    },
+    timeout: 30000
+  });
+
+  return {
+    body: {
+      choices: [{
+        message: {
+          content: response.data.choices[0].message.content
+        }
+      }]
+    }
+  };
+}
+
+// Helper function to determine which API to use
+function getAPIProvider(gptModel) {
+  // If model starts with 'openai/' or user specified OpenAI models directly
+  if (gptModel.startsWith('openai/') || 
+      ['gpt-4', 'gpt-4-turbo', 'gpt-3.5-turbo', 'gpt-4o', 'gpt-4o-mini'].includes(gptModel)) {
+    return 'openai';
+  }
+  // Default to GitHub Models for everything else
+  return 'github';
+}
+
 functions.http('evaluateCandidate', async (req, res) => {
   const requestStartTime = Date.now();
   console.log(`[${new Date().toISOString()}] Request received - Method: ${req.method}`);
@@ -50,7 +101,8 @@ functions.http('evaluateCandidate', async (req, res) => {
     return res.json({ 
       status: 'healthy', 
       timestamp: new Date().toISOString(),
-      hasToken: !!token,
+      hasGitHubToken: !!githubToken,
+      hasOpenAIKey: !!openaiApiKey,
       uptime: process.uptime()
     });
   }
@@ -61,22 +113,15 @@ functions.http('evaluateCandidate', async (req, res) => {
   }
 
   try {
-    // Check if client is initialized
-    if (!client) {
-      return res.status(500).json({
-        error: 'Service configuration error',
-        message: 'GITHUB_TOKEN is not configured. Please set the environment variable.'
-      });
-    }
-    
-    // Extract parameters from URL
+    // Extract parameters
     const candidateId = req.query.candidate_id || req.body?.candidate_id;
     const interviewId = req.query.interview_id || req.body?.interview_id;
     const question = req.query.question || req.body?.question;
     const answer = req.query.answer || req.body?.answer;
     const gptModel = req.query.gpt_model || req.body?.gpt_model || 'google/gemini-1.5-flash';
+    const apiProvider = req.query.api_provider || req.body?.api_provider || getAPIProvider(gptModel);
     
-    console.log(`[${new Date().toISOString()}] Request params - Model: ${gptModel}, Candidate: ${candidateId}, Interview: ${interviewId}`);
+    console.log(`[${new Date().toISOString()}] Request params - Model: ${gptModel}, Provider: ${apiProvider}, Candidate: ${candidateId}, Interview: ${interviewId}`);
 
     // Validate required parameters
     if (!candidateId || !interviewId) {
@@ -91,6 +136,21 @@ functions.http('evaluateCandidate', async (req, res) => {
       });
     }
 
+    // Check if appropriate credentials are available
+    if (apiProvider === 'openai' && !openaiApiKey) {
+      return res.status(500).json({
+        error: 'Service configuration error',
+        message: 'OPENAI_API_KEY is not configured for OpenAI provider.'
+      });
+    }
+
+    if (apiProvider === 'github' && !githubClient) {
+      return res.status(500).json({
+        error: 'Service configuration error',
+        message: 'GITHUB_TOKEN is not configured for GitHub Models provider.'
+      });
+    }
+
     // Prepare the evaluation request
     const evaluationRequest = `
 ${EVALUATION_PROMPT}
@@ -102,40 +162,46 @@ ${EVALUATION_PROMPT}
 Please evaluate this answer according to the criteria above.
 `;
 
-    // Call GitHub Models API
-    console.log(`[${new Date().toISOString()}] Calling GitHub Models API with model: ${gptModel}`);
+    // Call appropriate API based on provider
+    console.log(`[${new Date().toISOString()}] Calling ${apiProvider} API with model: ${gptModel}`);
     console.log(`[${new Date().toISOString()}] Question length: ${question.length}, Answer length: ${answer.length}`);
     
     const apiStartTime = Date.now();
+    let response;
     
-    const response = await client.path('/chat/completions').post({
-      body: {
-        model: gptModel,
-        messages: [
-          {
-            role: 'system',
-            content: 'You are an expert interviewer evaluating candidate responses. Return only valid JSON.'
-          },
-          {
-            role: 'user',
-            content: evaluationRequest
-          }
-        ],
-        temperature: 0.3,
-        response_format: { type: 'json_object' }
-      },
-      requestOptions: {
-        timeout: 30000 // 30 second timeout for API call
+    if (apiProvider === 'openai') {
+      response = await callOpenAIAPI(gptModel, evaluationRequest);
+    } else {
+      // GitHub Models API
+      response = await githubClient.path('/chat/completions').post({
+        body: {
+          model: gptModel,
+          messages: [
+            {
+              role: 'system',
+              content: 'You are an expert interviewer evaluating candidate responses. Return only valid JSON.'
+            },
+            {
+              role: 'user',
+              content: evaluationRequest
+            }
+          ],
+          temperature: 0.3,
+          response_format: { type: 'json_object' }
+        },
+        requestOptions: {
+          timeout: 30000
+        }
+      });
+
+      if (isUnexpected(response)) {
+        console.error(`[${new Date().toISOString()}] API returned unexpected response:`, response.body);
+        throw response.body.error;
       }
-    });
+    }
 
     const apiDuration = Date.now() - apiStartTime;
     console.log(`[${new Date().toISOString()}] API response received in ${apiDuration}ms`);
-
-    if (isUnexpected(response)) {
-      console.error(`[${new Date().toISOString()}] API returned unexpected response:`, response.body);
-      throw response.body.error;
-    }
 
     const evaluationResult = JSON.parse(response.body.choices[0].message.content);
 
@@ -146,6 +212,7 @@ Please evaluate this answer according to the criteria above.
       timestamp: new Date().toISOString(),
       evaluation: evaluationResult,
       model_used: gptModel,
+      api_provider: apiProvider,
       prompt_version: '1.0'
     };
 
@@ -157,16 +224,37 @@ Please evaluate this answer according to the criteria above.
   } catch (error) {
     const totalDuration = Date.now() - requestStartTime;
     console.error(`[${new Date().toISOString()}] Error after ${totalDuration}ms:`, error);
-    console.error(`[${new Date().toISOString()}] Error details:`, {
-      message: error.message,
-      status: error.response?.status,
-      statusText: error.response?.statusText,
-      data: error.response?.data
-    });
     
-    res.status(500).json({
+    // Enhanced error handling for different providers
+    let errorMessage = error.message;
+    let errorDetails = {};
+    
+    if (error.response) {
+      // Axios error (OpenAI)
+      errorDetails = {
+        status: error.response.status,
+        statusText: error.response.statusText,
+        data: error.response.data
+      };
+      
+      if (error.response.status === 429) {
+        errorMessage = 'Rate limit exceeded';
+        if (error.response.headers) {
+          errorDetails.rateLimitHeaders = {
+            limit: error.response.headers['x-ratelimit-limit'],
+            remaining: error.response.headers['x-ratelimit-remaining'],
+            reset: error.response.headers['x-ratelimit-reset']
+          };
+        }
+      }
+    }
+    
+    console.error(`[${new Date().toISOString()}] Error details:`, errorDetails);
+    
+    res.status(error.response?.status || 500).json({
       error: 'Internal server error',
-      message: error.message,
+      message: errorMessage,
+      details: errorDetails,
       duration: totalDuration
     });
   }
